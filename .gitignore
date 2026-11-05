@@ -1,0 +1,6 @@
+# The push token (see tools/push.sh). Never commit it.
+.github-token
+
+# OS clutter
+.DS_Store
+Thumbs.db
