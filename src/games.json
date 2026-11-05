@@ -1,0 +1,20 @@
+{
+  "hub": {
+    "file": "game-lab.html",
+    "title": "Game Lab"
+  },
+  "games": [
+    {
+      "id": "make-24",
+      "title": "Make 24",
+      "file": "make-24.html",
+      "css": [
+        "game.css"
+      ],
+      "js": [
+        "engine.js",
+        "game.js"
+      ]
+    }
+  ]
+}

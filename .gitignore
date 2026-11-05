@@ -4,3 +4,6 @@
 # OS clutter
 .DS_Store
 Thumbs.db
+
+# Browser-check screenshots and other build scratch
+out/

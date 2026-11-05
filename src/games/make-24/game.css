@@ -1,0 +1,109 @@
+/* ===== Make 24 ===== */
+.mode { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.m24 { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: var(--gap); min-height: 0; }
+.m24.has-timer { grid-template-columns: minmax(0, 1fr) clamp(14rem, 22vw, 20rem); }
+
+/* ---------- the puzzle ---------- */
+.m24 .stage { --card: clamp(52px, min(19vw, 21vh), 230px); display: flex; flex-direction: column; gap: clamp(.55rem, 1.6vh, 1.1rem); padding: clamp(.9rem, 2.2vh, 1.5rem) clamp(.9rem, 2vw, 1.9rem) clamp(.9rem, 2.2vh, 1.6rem); min-height: 0; }
+.m24-board .stage { --card: clamp(64px, min(17vw, 22vh), 300px); }
+.m24-board.has-timer .stage { --card: clamp(64px, min(14vw, 21vh), 300px); }
+/* once hints or an answer are showing, the cards step back to make room for them */
+.m24 .stage:has(.reveal:not(:empty)) { --card: clamp(46px, min(15vw, 13vh), 200px); }
+.m24-board .stage:has(.reveal:not(:empty)) { --card: clamp(56px, min(14vw, 17vh), 260px); }
+.stage-top { display: flex; align-items: center; justify-content: space-between; gap: .8rem; min-height: 1.1rem; }
+.play { display: flex; flex-direction: column; align-items: center; gap: clamp(.6rem, 1.8vh, 1.3rem); padding-top: clamp(0rem, 1vh, .8rem); min-width: 0; }
+.tiles { display: flex; justify-content: center; align-items: flex-start; gap: clamp(8px, 1.5vw, 30px); padding-top: calc(var(--card) * .05); padding-bottom: 1.9rem; min-height: calc(var(--card) * 1.25 + 1.9rem); }
+.tile { position: relative; width: var(--card); height: calc(var(--card) * 1.2); padding: 0; border: 0; border-radius: min(22px, calc(var(--card) * .12)); background: var(--navy); color: var(--white); box-shadow: calc(var(--card) * .035) calc(var(--card) * .045) 0 var(--shadow); font-weight: 900; font-size: calc(var(--card) * .58); line-height: 1; font-variant-numeric: tabular-nums; display: grid; place-items: center; }
+.tile[data-size="3"] { font-size: calc(var(--card) * .44); }
+.tile[data-size="4"] { font-size: calc(var(--card) * .34); }
+.tile[data-size="5"] { font-size: calc(var(--card) * .27); }
+.tile.made { background: var(--paleturq); color: var(--navy); }
+.tile.sel { background: var(--turq); color: var(--navy); transform: translateY(-4%); }
+.tile.win { background: var(--navy); color: var(--turq); }
+.tile.isNew { animation: pop .25s cubic-bezier(.34, 1.56, .64, 1); }
+.tile { transition: width .2s ease, height .2s ease, font-size .2s ease; }
+.tile.shake { animation: shake .3s ease; }
+.tile:active { transform: translateY(1px) scale(.97); }
+.tile-note { position: absolute; top: calc(100% + .65rem); left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: clamp(.72rem, calc(var(--card) * .1), 1.05rem); font-weight: 700; color: var(--teal); }
+@keyframes pop { from { transform: scale(.86); } to { transform: none; } }
+@keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+.fr { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1; font-size: .62em; }
+.fr > span:first-child { border-bottom: .09em solid currentColor; padding: 0 .14em .07em; }
+.fr > span:last-child { padding: .09em .14em 0; }
+.pw { white-space: nowrap; }
+sup.ex { font-size: .68em; line-height: 0; vertical-align: baseline; position: relative; top: -.5em; margin-left: .05em; }
+.tile > span:first-child sup.ex { font-size: .5em; top: -.85em; }
+.neg { margin-right: .03em; }
+
+.ops { display: flex; justify-content: center; gap: clamp(.5rem, 1.2vw, 1rem); }
+.op { width: clamp(3rem, calc(var(--card) * .34), 4.6rem); aspect-ratio: 1; border: 0; border-radius: 50%; background: var(--paleturq); font-weight: 900; font-size: clamp(1.5rem, calc(var(--card) * .2), 2.5rem); line-height: 1; display: grid; place-items: center; padding: 0 0 .06em; }
+.op[aria-pressed="true"] { background: var(--turq); }
+.op:active { transform: translateY(1px) scale(.97); }
+
+.work { min-height: 2.2rem; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: .4rem .5rem; font-size: 1.1rem; text-align: center; max-width: 100%; }
+.work .tip { color: var(--teal); font-weight: 500; font-size: .95rem; }
+.step { background: var(--paleturq); border-radius: 999px; padding: .2rem .8rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.work .verdict { flex-basis: 100%; font-weight: 700; font-size: 1.15rem; color: var(--teal); }
+.work .verdict.good { font-weight: 900; font-size: 1.6rem; color: var(--navy); }
+.work .warn { flex-basis: 100%; }
+.work .warn span { display: inline-block; background: var(--coral); border-radius: 999px; padding: .2rem .9rem; font-weight: 700; }
+
+.grow { flex: 1; min-height: 0; }
+/* the reveal gives way first when the frame is short: it shrinks and scrolls inside itself, so the buttons stay put */
+.reveal { background: var(--cream); border-radius: 14px; padding: .7rem 1rem; display: flex; flex-direction: column; gap: .45rem; font-size: 1.05rem; font-weight: 500; min-width: 0; min-height: 0; overflow: auto; flex: 0 1 auto; }
+.reveal:empty { display: none; }
+.reveal .row { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .5rem; }
+.reveal .row > .label { min-width: 6.4rem; }
+.reveal b { font-weight: 900; }
+.reveal .expr { font-weight: 900; font-size: 1.4rem; line-height: 1.4; }
+.reveal .step { background: var(--white); }
+
+.actions { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.actions .next { margin-left: auto; padding: .8rem 2rem; font-size: 1.1rem; }
+
+/* ---------- Daily progress ---------- */
+.dots { display: flex; gap: .3rem; flex: none; }
+.dot { width: .95rem; height: .95rem; border-radius: 4px; background: var(--white); box-shadow: inset 0 0 0 2px var(--sand); }
+.dot.now { box-shadow: inset 0 0 0 2px var(--navy); }
+.dot.clean { background: var(--accent); box-shadow: none; }
+.dot.helped { background: var(--accent-pale); box-shadow: inset 0 0 0 2px var(--accent); }
+.dot.shown { background: var(--sand); box-shadow: none; }
+
+/* ---------- Board timer ---------- */
+.side { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.timer { padding: 1rem 1.1rem 1.1rem; display: flex; flex-direction: column; gap: .7rem; }
+.clock { font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; text-align: center; font-size: clamp(3.2rem, 6vw, 6.6rem); }
+.clock.low { color: var(--coral-deep); }
+.bar { height: 10px; border-radius: 999px; background: var(--paleturq); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 100%; background: var(--turq); border-radius: inherit; transform-origin: left; }
+.timer-btns { display: flex; gap: .6rem; }
+.timer-btns .btn { flex: 1; padding-inline: .5rem; }
+.timer.up { background: var(--coral); animation: alarm 1s ease-in-out infinite alternate; }
+.timer.up .clock { font-size: clamp(2rem, 3.3vw, 3.5rem); letter-spacing: .02em; padding-block: .6rem; white-space: nowrap; }
+.timer.up .bar { display: none; }
+.timer.up .btn { background: var(--white); }
+@keyframes alarm { from { background: var(--coral); } to { background: var(--coral-deep); } }
+
+/* ---------- front page art and how to play ---------- */
+.m24-art { display: flex; gap: clamp(.4rem, 1.2vw, .7rem); }
+.m24-art span { width: clamp(2.6rem, 8vh, 3.8rem); height: calc(clamp(2.6rem, 8vh, 3.8rem) * 1.2); border-radius: 10px; background: var(--navy); color: var(--white); display: grid; place-items: center; font-weight: 900; font-size: clamp(1.4rem, 4.4vh, 2.1rem); box-shadow: 3px 4px 0 var(--shadow); }
+.howto ol { margin: 0; padding-left: 1.3rem; display: flex; flex-direction: column; gap: .25rem; font-weight: 500; }
+.howto-ex { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.howto-ex .nums { font-weight: 900; margin-right: .3rem; }
+.howto-keys { font-size: .85rem; font-weight: 500; color: var(--teal); }
+.howto-keys b { color: var(--navy); }
+@media (hover: none), (pointer: coarse) { .howto-keys { display: none; } }
+
+@media (max-width: 860px) {
+  .m24.has-timer { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .m24.has-timer .side { order: -1; }
+  .m24.has-timer .timer { flex-direction: row; align-items: center; padding: .6rem .8rem; }
+  .m24.has-timer .clock { font-size: 2rem; min-width: 4.5ch; }
+  .m24.has-timer .bar { flex: 1; }
+  .m24.has-timer .timer-btns .btn { min-height: 2.4rem; padding: .4rem .9rem; }
+  .m24-board.has-timer .stage, .m24-board .stage { --card: clamp(52px, min(19vw, 17vh), 200px); }
+  .reveal .row > .label { min-width: 100%; }
+  .actions .btn { padding-inline: 1rem; }
+  .actions .next { padding-inline: 1.2rem; font-size: 1rem; }
+}
