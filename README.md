@@ -39,7 +39,7 @@ Today `make-24.html` is `game-lab.html` with two lines changed: the `<title>`, a
 
 ## Pushing from a Claude session
 
-Use a fine-grained token limited to this repo (**Only select repositories** → `gamelab`, **Contents: Read and write**). It lives in `.github-token` at the repo root (git-ignored, `chmod 600`), never in the remote URL, output or a commit message.
+Use a fine-grained token limited to this repo (**Only select repositories** → `Gamelab`, **Contents: Read and write**). It lives in `.github-token` at the repo root (git-ignored, `chmod 600`), never in the remote URL, output or a commit message.
 
 ```sh
 CLAUDE_MODEL_NAME="Claude Opus 5.5" tools/push.sh "what changed"
