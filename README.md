@@ -6,12 +6,32 @@ Students reach the games through the class Google Site (GitHub and the class web
 
 ## What's here
 
-| File | What it is |
+| Path | What it is |
 | --- | --- |
-| `game-lab.html` | The Game Lab hub, with every game in it |
-| `make-24.html` | Make 24 on its own: the same file, opening straight to the game |
+| `game-lab.html` | The Game Lab hub, with every game in it (built) |
+| `make-24.html` | Make 24 on its own, opening straight to the game (built) |
+| `src/` | The source: the kit, the font, and each game in `src/games/<id>/` |
+| `src/games.json` | Which games are in, in hub order, and their file names |
+| `tools/build.mjs` | Writes the built files from `src/` |
+| `tools/check-browser.mjs` | Plays every game in headless Chrome at Chromebook, panel and phone sizes |
+| `tests/` | Engine, kit and build tests |
 | `tools/push.sh` | Commit and push from a Claude session (see below) |
 | `docs/PLAN.md` | The plan: which games, in what order, and how each gets built |
+| `docs/briefs/` | One page per game: rules, levels, modes, hints and debrief |
+
+## Building
+
+Edit `src/`, never the built `.html` files, then:
+
+```sh
+node tools/build.mjs           # write game-lab.html and each game's own file
+node --test                    # engine, kit and build tests (a full year of Dailies included)
+node tools/check-browser.mjs   # play everything in headless Chrome; screenshots in out/screens/
+```
+
+The build needs nothing but Node. It refuses to write a file that could reach the network: a web address, `fetch`, an outside script or stylesheet, or an element loading an outside file. `node tools/build.mjs --check` fails if a built file is out of date.
+
+A game lives in `src/games/<id>/`: its CSS, its script files (wrapped together so nothing leaks between games), and optionally `check.mjs`, the browser check's script for it. Adding a game means adding its folder and its line in `src/games.json`.
 
 ## Games
 
@@ -26,17 +46,15 @@ Students reach the games through the class Google Site (GitHub and the class web
 
 ## Rules every game follows
 
-The kit (the shared code at the top of each file's script) and every game in it keep to these:
+The kit (`src/kit/`) and every game in it keep to these:
 
-- **No network, no student data.** Nothing is fetched or sent, and nothing about a student is asked for or kept. Progress (Daily results, best streak, settings, sound) stays in that browser under `gamelab.` keys, and the games keep working when storage is blocked or wiped.
+- **No network, no student data.** Nothing is fetched or sent, and nothing about a student is asked for or kept. Progress (Daily results, streaks, settings, sound) stays in that browser under `gamelab.` keys, and the games keep working when storage is blocked or wiped.
 - **One way in.** A game calls `Lab.register({ id, name, modes, accent, icon, art, howTo, dailyDone, mount })` and touches only the element it is mounted in. `mount(mode, host, ctx)` returns `{ unmount }`, which removes its key handlers and timers.
-- **Daily is shared.** `Lab.dailyRng(gameId)` is seeded from the date, so everyone gets the same puzzles that day.
+- **Daily is shared.** `Lab.dailyRng(gameId)` is seeded from the date, so everyone gets the same puzzles that day. The hub counts a Daily streak across games; weekends never break it.
 - **Sound** is off by default for solo play (a room of Chromebooks) and on for the board.
 - **The look is Make 24's**: white cards with hard sand shadows on the cream grid, one navy dock bottom-left, the sea along the bottom. Coral is for alerts only; each game sets its own accent.
 
-## Hub and single-game editions
-
-Today `make-24.html` is `game-lab.html` with two lines changed: the `<title>`, and `Lab.start()` becomes `Lab.start({ single: 'make-24' })`. A change to a game goes into both files, or they drift.
+The full list, and how each new game gets built, is in `docs/PLAN.md`.
 
 ## Pushing from a Claude session
 

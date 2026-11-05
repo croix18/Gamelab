@@ -38,10 +38,8 @@
   }
   Lab.hash = hash;
   Lab.rng = seed => mulberry32(typeof seed === 'string' ? hash(seed) : seed);
-  Lab.today = function () {
-    const d = new Date();
-    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
-  };
+  const isoOf = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  Lab.today = () => isoOf(new Date());
   Lab.dailyRng = (gameId, date) => Lab.rng(gameId + '|daily|' + (date || Lab.today()));
   Lab.dateWords = function (iso) {
     const p = iso.split('-').map(Number);
@@ -130,12 +128,14 @@
     helped: ['✓', 'solved with hints'],
     shown: ['–', 'answer shown']
   };
+  /* r: { game, sub, squares?: ['clean' | 'helped' | 'shown'], body?: html of the game's own, stats: [[value, label]], key?: false } */
   Lab.results = function (r, opts) {
-    const squares = r.squares.map((s, i) => '<span class="r-sq ' + s + '" role="img" aria-label="' + (i + 1) + ': ' + SQ[s][1] + '">' + SQ[s][0] + '</span>').join('');
+    const sq = r.squares || [];
+    const squares = sq.length ? '<div class="r-squares">' + sq.map((s, i) => '<span class="r-sq ' + s + '" role="img" aria-label="' + (i + 1) + ': ' + SQ[s][1] + '">' + SQ[s][0] + '</span>').join('') + '</div>' : '';
     const stats = r.stats.map(s => '<div class="r-stat"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>').join('');
-    const key = '<p class="r-key">' + ['clean', 'helped', 'shown'].map(s => '<i><span class="r-sq ' + s + '" aria-hidden="true">' + SQ[s][0] + '</span>' +
-      (s === 'clean' ? 'No hints' : s === 'helped' ? 'With hints' : 'Shown') + '</i>').join('') + '</p>';
-    const html = '<p class="r-game">' + esc(r.game) + '</p><p class="r-sub">' + esc(r.sub) + '</p><div class="r-squares">' + squares + '</div>' +
+    const key = sq.length && r.key !== false ? '<p class="r-key">' + ['clean', 'helped', 'shown'].map(s => '<i><span class="r-sq ' + s + '" aria-hidden="true">' + SQ[s][0] + '</span>' +
+      (s === 'clean' ? 'No hints' : s === 'helped' ? 'With hints' : 'Shown') + '</i>').join('') + '</p>' : '';
+    const html = '<p class="r-game">' + esc(r.game) + '</p><p class="r-sub">' + esc(r.sub) + '</p>' + squares + (r.body || '') +
       '<div class="r-stats">' + stats + '</div>' + key;
     return Lab.sheet(html, Object.assign({ cls: 'results', label: r.game + ' results' }, opts));
   };
@@ -152,6 +152,25 @@
 
   Lab.register = function (game) { games.push(game); };
   const byId = id => games.find(g => g.id === id);
+
+  /* The hub's name and tagline. */
+  const HUB = { name: 'Game Lab', tagline: 'Train your brain. Master the game.' };
+
+  /* Days in a row with at least one Daily done. Today counts once it is done, and a weekend never breaks a streak. */
+  Lab.dailyStreak = function (from) {
+    const dailies = games.filter(g => g.dailyDone);
+    if (!dailies.length) return 0;
+    const d = from ? new Date(from.getTime()) : new Date();
+    const done = () => dailies.some(g => { try { return !!g.dailyDone(isoOf(d)); } catch (e) { return false; } });
+    let n = 0;
+    if (!done()) d.setDate(d.getDate() - 1);
+    for (let i = 0; i < 400; i++) {
+      if (done()) n++;
+      else if (d.getDay() !== 0 && d.getDay() !== 6) break;
+      d.setDate(d.getDate() - 1);
+    }
+    return n;
+  };
 
   function setAccent(game) {
     const root = doc.documentElement.style;
@@ -215,19 +234,20 @@
     const app = clearScreen();
     const date = Lab.today();
     const dailies = games.filter(g => g.modes.indexOf('daily') >= 0);
-    let h = '<div class="hub">';
+    let h = '<div class="hub"><header class="hub-head"><h1 class="hub-title">' + esc(HUB.name) + '</h1><p class="hub-tag">' + esc(HUB.tagline) + '</p></header>';
     if (dailies.length) {
+      const streak = Lab.dailyStreak();
       h += '<section class="card today" aria-label="Daily puzzles"><p class="label">Daily · ' + esc(Lab.dateWords(date)) + '</p><div class="today-list">' +
         dailies.map(g => '<button class="btn daily-go" type="button" data-game="' + g.id + '">' + esc(g.name) +
           (g.dailyDone && g.dailyDone(date) ? '<span class="done" aria-label="done today">✓</span>' : '') + '</button>').join('') +
-        '</div></section>';
+        '</div>' + (streak ? '<p class="today-streak">Streak <b>' + streak + '</b></p>' : '') + '</section>';
     }
     h += '<div class="games">' + games.map(g => '<button class="card gtile" type="button" data-game="' + g.id + '">' + g.icon +
       '<span class="gname">' + esc(g.name) + '</span></button>').join('') + '</div></div>';
     app.innerHTML = h;
     app.querySelectorAll('.gtile').forEach(b => b.addEventListener('click', () => showHome(byId(b.dataset.game))));
     app.querySelectorAll('.daily-go').forEach(b => b.addEventListener('click', () => showMode(byId(b.dataset.game), 'daily')));
-    shell.redock = () => dock([{ brand: 'Game Lab' }]);
+    shell.redock = () => dock([{ brand: HUB.name }]);
     shell.redock();
   }
 
@@ -272,4 +292,5 @@
     if (shell.single) showHome(shell.single); else showHub();
   };
   Lab._shell = shell; /* for the tests */
+  Lab._games = games;
 })(window);

@@ -65,8 +65,8 @@ const RULES = [
   [/<script\b[^>]*\bsrc\s*=/gi, 'an outside script'],
   [/<link\b[^>]*\bhref\s*=/gi, 'a linked file'],
   [/@import\b/gi, 'a CSS @import'],
-  [/url\(\s*(?!["']?data:)/gi, 'a CSS url() that is not data:'],
-  [/<(?:iframe|img|audio|video|source|embed|object)\b[^>]*\bsrc\s*=\s*["']?(?!data:|blob:)/gi, 'an element loading an outside file'],
+  [/\burl\(\s*(?!["']?data:)/g, 'a CSS url() that is not data:'],
+  [/<(?:iframe|img|audio|video|source|embed|object)\b[^>]*\bsrc\s*=\s*(?!["']?(?:data:|blob:))/gi, 'an element loading an outside file'],
   [/<form\b[^>]*\baction\s*=/gi, 'a form that submits somewhere']
 ];
 

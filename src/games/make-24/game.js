@@ -110,6 +110,12 @@
     return list;
   }
 
+  /* The day's five puzzles: the same on every device that day. */
+  function dailyPuzzles(date) {
+    const rnd = Lab.dailyRng(ID, date), avoid = new Set();
+    return DAILY.map(([deckId, level]) => { const p = generate(deckId, level, avoid, rnd); avoid.add(p.key); return p; });
+  }
+
   /* ---------- one session of a mode ---------- */
   function mount(mode, host, ctx) {
     const saved = Lab.store.get(ID + '.settings', {}) || {};
@@ -376,8 +382,7 @@
 
     /* ---------- Daily ---------- */
     function startDaily(replay) {
-      const rnd = Lab.dailyRng(ID, ctx.date), avoid = new Set();
-      const puzzles = DAILY.map(([deckId, level]) => { const p = generate(deckId, level, avoid, rnd); avoid.add(p.key); return p; });
+      const puzzles = dailyPuzzles(ctx.date);
       S.daily = { date: ctx.date, puzzles, i: 0, results: [], start: Date.now(), replay: !!replay };
       deal();
     }
@@ -505,6 +510,7 @@
       '<p><b>Hint</b> gives you a nudge. <b>Show me</b> gives the answer. <b>Daily</b> is five puzzles, the same for everyone today.</p>' +
       '<p class="howto-keys">Keys: <b>1</b>–<b>4</b> numbers · <b>+ ' + MINUS + ' * /</b> · <b>U</b> undo · <b>R</b> start over · <b>H</b> hint · <b>N</b> next</p>',
     dailyDone: date => !!Lab.store.get(ID + '.daily.' + date, null),
+    daily: dailyPuzzles,
     mount
   });
 })();

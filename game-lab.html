@@ -68,7 +68,7 @@ button { cursor: pointer; touch-action: manipulation; -webkit-user-select: none;
 .pill.round { width: 40px; padding: 0; display: grid; place-items: center; font-weight: 900; font-size: 18px; line-height: 1; flex: none; }
 .pill svg { width: 20px; height: 20px; display: block; }
 #dock :focus-visible { outline-color: var(--white); }
-@media (max-width: 460px) { #dock .brand { display: none; } }
+@media (max-width: 460px) { #dock .brand { display: none; } #dock:has(> .brand:only-child) { display: none; } }
 
 /* ---------- the sea ---------- */
 #waves { position: fixed; left: 0; bottom: 0; width: 100%; height: clamp(44px, 8vh, 88px); z-index: 0; pointer-events: none; display: block; }
@@ -109,6 +109,11 @@ button { cursor: pointer; touch-action: manipulation; -webkit-user-select: none;
 .today { padding: .9rem 1.1rem; display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; }
 .today-list { display: flex; flex-wrap: wrap; gap: .5rem; }
 .today .done { font-weight: 900; margin-left: .2rem; }
+.today-streak { margin: 0 0 0 auto; color: var(--teal); font-weight: 700; white-space: nowrap; }
+.today-streak b { color: var(--navy); font-weight: 900; font-variant-numeric: tabular-nums; }
+.hub-head { display: flex; flex-direction: column; gap: .3rem; padding: clamp(.2rem, 1vh, .6rem) .3rem 0; }
+.hub-title { margin: 0; font-weight: 900; font-size: clamp(2.1rem, 6.5vh, 3.6rem); line-height: 1; letter-spacing: -.01em; }
+.hub-tag { margin: 0; color: var(--teal); font-weight: 700; font-size: clamp(1rem, 2.3vh, 1.3rem); }
 .games { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); gap: var(--gap); align-content: start; }
 .gtile { border: 0; padding: clamp(1.2rem, 4.5vh, 2.4rem) 1rem clamp(1rem, 3.5vh, 1.9rem); display: flex; flex-direction: column; align-items: center; gap: clamp(.7rem, 2vh, 1.1rem); color: var(--navy); }
 .gtile svg { width: clamp(4.5rem, 17vh, 8rem); height: auto; display: block; }
@@ -289,10 +294,8 @@ sup.ex { font-size: .68em; line-height: 0; vertical-align: baseline; position: r
   }
   Lab.hash = hash;
   Lab.rng = seed => mulberry32(typeof seed === 'string' ? hash(seed) : seed);
-  Lab.today = function () {
-    const d = new Date();
-    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
-  };
+  const isoOf = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  Lab.today = () => isoOf(new Date());
   Lab.dailyRng = (gameId, date) => Lab.rng(gameId + '|daily|' + (date || Lab.today()));
   Lab.dateWords = function (iso) {
     const p = iso.split('-').map(Number);
@@ -381,12 +384,14 @@ sup.ex { font-size: .68em; line-height: 0; vertical-align: baseline; position: r
     helped: ['✓', 'solved with hints'],
     shown: ['–', 'answer shown']
   };
+  /* r: { game, sub, squares?: ['clean' | 'helped' | 'shown'], body?: html of the game's own, stats: [[value, label]], key?: false } */
   Lab.results = function (r, opts) {
-    const squares = r.squares.map((s, i) => '<span class="r-sq ' + s + '" role="img" aria-label="' + (i + 1) + ': ' + SQ[s][1] + '">' + SQ[s][0] + '</span>').join('');
+    const sq = r.squares || [];
+    const squares = sq.length ? '<div class="r-squares">' + sq.map((s, i) => '<span class="r-sq ' + s + '" role="img" aria-label="' + (i + 1) + ': ' + SQ[s][1] + '">' + SQ[s][0] + '</span>').join('') + '</div>' : '';
     const stats = r.stats.map(s => '<div class="r-stat"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>').join('');
-    const key = '<p class="r-key">' + ['clean', 'helped', 'shown'].map(s => '<i><span class="r-sq ' + s + '" aria-hidden="true">' + SQ[s][0] + '</span>' +
-      (s === 'clean' ? 'No hints' : s === 'helped' ? 'With hints' : 'Shown') + '</i>').join('') + '</p>';
-    const html = '<p class="r-game">' + esc(r.game) + '</p><p class="r-sub">' + esc(r.sub) + '</p><div class="r-squares">' + squares + '</div>' +
+    const key = sq.length && r.key !== false ? '<p class="r-key">' + ['clean', 'helped', 'shown'].map(s => '<i><span class="r-sq ' + s + '" aria-hidden="true">' + SQ[s][0] + '</span>' +
+      (s === 'clean' ? 'No hints' : s === 'helped' ? 'With hints' : 'Shown') + '</i>').join('') + '</p>' : '';
+    const html = '<p class="r-game">' + esc(r.game) + '</p><p class="r-sub">' + esc(r.sub) + '</p>' + squares + (r.body || '') +
       '<div class="r-stats">' + stats + '</div>' + key;
     return Lab.sheet(html, Object.assign({ cls: 'results', label: r.game + ' results' }, opts));
   };
@@ -403,6 +408,25 @@ sup.ex { font-size: .68em; line-height: 0; vertical-align: baseline; position: r
 
   Lab.register = function (game) { games.push(game); };
   const byId = id => games.find(g => g.id === id);
+
+  /* The hub's name and tagline. */
+  const HUB = { name: 'Game Lab', tagline: 'Train your brain. Master the game.' };
+
+  /* Days in a row with at least one Daily done. Today counts once it is done, and a weekend never breaks a streak. */
+  Lab.dailyStreak = function (from) {
+    const dailies = games.filter(g => g.dailyDone);
+    if (!dailies.length) return 0;
+    const d = from ? new Date(from.getTime()) : new Date();
+    const done = () => dailies.some(g => { try { return !!g.dailyDone(isoOf(d)); } catch (e) { return false; } });
+    let n = 0;
+    if (!done()) d.setDate(d.getDate() - 1);
+    for (let i = 0; i < 400; i++) {
+      if (done()) n++;
+      else if (d.getDay() !== 0 && d.getDay() !== 6) break;
+      d.setDate(d.getDate() - 1);
+    }
+    return n;
+  };
 
   function setAccent(game) {
     const root = doc.documentElement.style;
@@ -466,19 +490,20 @@ sup.ex { font-size: .68em; line-height: 0; vertical-align: baseline; position: r
     const app = clearScreen();
     const date = Lab.today();
     const dailies = games.filter(g => g.modes.indexOf('daily') >= 0);
-    let h = '<div class="hub">';
+    let h = '<div class="hub"><header class="hub-head"><h1 class="hub-title">' + esc(HUB.name) + '</h1><p class="hub-tag">' + esc(HUB.tagline) + '</p></header>';
     if (dailies.length) {
+      const streak = Lab.dailyStreak();
       h += '<section class="card today" aria-label="Daily puzzles"><p class="label">Daily · ' + esc(Lab.dateWords(date)) + '</p><div class="today-list">' +
         dailies.map(g => '<button class="btn daily-go" type="button" data-game="' + g.id + '">' + esc(g.name) +
           (g.dailyDone && g.dailyDone(date) ? '<span class="done" aria-label="done today">✓</span>' : '') + '</button>').join('') +
-        '</div></section>';
+        '</div>' + (streak ? '<p class="today-streak">Streak <b>' + streak + '</b></p>' : '') + '</section>';
     }
     h += '<div class="games">' + games.map(g => '<button class="card gtile" type="button" data-game="' + g.id + '">' + g.icon +
       '<span class="gname">' + esc(g.name) + '</span></button>').join('') + '</div></div>';
     app.innerHTML = h;
     app.querySelectorAll('.gtile').forEach(b => b.addEventListener('click', () => showHome(byId(b.dataset.game))));
     app.querySelectorAll('.daily-go').forEach(b => b.addEventListener('click', () => showMode(byId(b.dataset.game), 'daily')));
-    shell.redock = () => dock([{ brand: 'Game Lab' }]);
+    shell.redock = () => dock([{ brand: HUB.name }]);
     shell.redock();
   }
 
@@ -523,6 +548,7 @@ sup.ex { font-size: .68em; line-height: 0; vertical-align: baseline; position: r
     if (shell.single) showHome(shell.single); else showHub();
   };
   Lab._shell = shell; /* for the tests */
+  Lab._games = games;
 })(window);
 
 (function () {
@@ -902,6 +928,12 @@ function customPuzzle(strs) {
     return list;
   }
 
+  /* The day's five puzzles: the same on every device that day. */
+  function dailyPuzzles(date) {
+    const rnd = Lab.dailyRng(ID, date), avoid = new Set();
+    return DAILY.map(([deckId, level]) => { const p = generate(deckId, level, avoid, rnd); avoid.add(p.key); return p; });
+  }
+
   /* ---------- one session of a mode ---------- */
   function mount(mode, host, ctx) {
     const saved = Lab.store.get(ID + '.settings', {}) || {};
@@ -1168,8 +1200,7 @@ function customPuzzle(strs) {
 
     /* ---------- Daily ---------- */
     function startDaily(replay) {
-      const rnd = Lab.dailyRng(ID, ctx.date), avoid = new Set();
-      const puzzles = DAILY.map(([deckId, level]) => { const p = generate(deckId, level, avoid, rnd); avoid.add(p.key); return p; });
+      const puzzles = dailyPuzzles(ctx.date);
       S.daily = { date: ctx.date, puzzles, i: 0, results: [], start: Date.now(), replay: !!replay };
       deal();
     }
@@ -1297,6 +1328,7 @@ function customPuzzle(strs) {
       '<p><b>Hint</b> gives you a nudge. <b>Show me</b> gives the answer. <b>Daily</b> is five puzzles, the same for everyone today.</p>' +
       '<p class="howto-keys">Keys: <b>1</b>–<b>4</b> numbers · <b>+ ' + MINUS + ' * /</b> · <b>U</b> undo · <b>R</b> start over · <b>H</b> hint · <b>N</b> next</p>',
     dailyDone: date => !!Lab.store.get(ID + '.daily.' + date, null),
+    daily: dailyPuzzles,
     mount
   });
 })();
