@@ -11,6 +11,7 @@ Students reach the games through the class Google Site (GitHub and the class web
 | `game-lab.html` | The Game Lab hub, with every game in it |
 | `make-24.html` | Make 24 on its own: the same file, opening straight to the game |
 | `tools/push.sh` | Commit and push from a Claude session (see below) |
+| `docs/PLAN.md` | The plan: which games, in what order, and how each gets built |
 
 ## Games
 
