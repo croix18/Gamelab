@@ -101,7 +101,7 @@ Slide every tile at once; two matching tiles merge into one worth double. Make a
 All of Croix's trainer: every bot up to The Admiral and Stockfish, rated puzzles, post-game review, guided lessons and the opening trainer.
 
 - **One Tempo, not two.** The Game Lab build takes Tempo from croix18/Tempo and dresses it in the Game Lab look rather than rewriting it, so an improvement to Tempo reaches students with a rebuild.
-- **The same Tempo as Croix's website.** The character-picture version stays his own copy (his call, 1 Nov) unless he says otherwise.
+- **No character pictures** (Croix, 4 Nov): the same Tempo as his website.
 - **Daily:** one puzzle for everyone from Tempo's rated set. **Board:** the class plays a bot, voting on each move.
 - **The engine starts only when chess opens,** so the rest of the hub stays quick.
 - **Two or three sessions.** The first reads croix18/Tempo (it needs read access) and works out how Tempo goes in before the brief is written.
@@ -174,9 +174,8 @@ Surround territory and capture stones, taught from the first stone the way Tempo
 
 ## Decisions
 
-- **4 Nov 2026 (Croix):** Probability Royale is out. 2048 and Go stay, and Go gets lessons the way chess does ("Don't underestimate my students"). The hub keeps "Train your brain. Master the game." All of Tempo goes in.
+- **4 Nov 2026 (Croix):** Probability Royale is out. 2048 and Go stay, and Go gets lessons the way chess does ("Don't underestimate my students"). The hub keeps "Train your brain. Master the game." All of Tempo goes in, without the character pictures. The plan is approved: build it.
 
 ## Open decisions (Croix)
 
-1. Tempo's character pictures. The plan keeps them out, following Croix's 1 Nov call to keep that version private; they go in if he says so.
-2. The hub's title: "Game Lab" as built, or "Wolf Pack Game Lab" as in the brainstorm's mockup.
+1. The hub's title: "Game Lab" as built, or "Wolf Pack Game Lab" as in the brainstorm's mockup.
