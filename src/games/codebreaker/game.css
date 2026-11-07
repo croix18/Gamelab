@@ -1,24 +1,36 @@
 /* ===== Codebreaker ===== */
 .cb-host { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-.cb { --ph: var(--ph-all); flex: 1; display: flex; flex-direction: column; min-height: 0; }
-.cb-stage { container-type: inline-size; flex: 1; display: flex; flex-direction: column; gap: clamp(.55rem, 1.6vh, 1.1rem); padding: clamp(.9rem, 2.2vh, 1.5rem) clamp(.9rem, 2vw, 1.9rem) clamp(.9rem, 2.2vh, 1.6rem); min-height: 0; outline: none; }
-.cb-top { display: flex; align-items: center; min-height: 1.1rem; }
-.cb-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: clamp(1rem, 3vw, 3.5rem); }
-.cb-m-board .cb-main { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+/* The pegs size to the stage: game.js sets the board's width (--pw-core, and --pw-full with the "N left" column) and
+   height (--ph-all, --ph-done) measured in pegs. Wide screens set the board beside a panel at least --side wide; the peg is the
+   largest that fits both ways, never below --peg-lo in height (a short screen scrolls instead). */
+.cb {
+  flex: 1; display: flex; flex-direction: column; min-height: 0;
+  --pw: var(--pw-full); --ph: var(--ph-all);
+  --gy: clamp(.55rem, 1.6vh, 1.1rem);
+  --gx: clamp(1rem, 2.6vw, 3.5rem);
+  --side: clamp(15rem, 34vw, 34rem);
+  --peg-lo: 28px; --peg-hi: 6.5rem;
+  --peg-w: calc((100cqw - var(--side) - var(--gx)) / var(--pw));
+  --peg-h: calc(100cqh / var(--ph));
+  --peg: min(var(--peg-w), max(var(--peg-lo), min(var(--peg-h), var(--peg-hi))));
+}
+.cb-m-board { --peg-hi: 7.5rem; }
+.cb-stage {
+  container-type: size; flex: 1; min-height: 0; outline: none; overflow-x: hidden; overflow-y: auto;
+  padding: clamp(.9rem, 2.2vh, 1.5rem) clamp(.9rem, 2vw, 1.9rem);
+  display: grid; grid-template-columns: auto minmax(var(--side), 34rem); justify-content: center; align-content: start; align-items: start; column-gap: var(--gx);
+}
 .cb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; }
 
-/* ---------- the board: the code on top, then a row per guess. The pegs fit the space the board gets:
-   game.js sets --pw and --ph-all, the board's width and height measured in pegs. ---------- */
-.cb-field { container-type: size; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
-.cb-board { display: flex; justify-content: center; }
-.cb-rows { --peg: min(calc(100cqw / var(--pw)), calc(100cqh / var(--ph)), 6.5rem); display: flex; flex-direction: column; }
-.cb-m-board .cb-rows { --peg: min(calc(100cqw / var(--pw)), calc(100cqh / var(--ph)), 7.5rem); }
-.cb-row { display: flex; align-items: center; gap: calc(var(--peg) * .35); padding: calc(var(--peg) * .1) calc(var(--peg) * .25); border-radius: calc(var(--peg) * .34); }
-.cb-num { flex: none; width: calc(var(--peg) * .7); height: calc(var(--peg) * .62); display: grid; place-items: center; border-radius: 999px; color: var(--teal); font-weight: 700; font-size: calc(var(--peg) * .34); font-variant-numeric: tabular-nums; }
-.cb-pegs { display: flex; gap: calc(var(--peg) * .14); }
+/* ---------- the board: the code on top, then a row per guess ---------- */
+.cb-field { width: calc(var(--peg) * var(--pw)); height: calc(var(--peg) * var(--ph)); display: flex; justify-content: center; }
+.cb-rows { display: flex; flex-direction: column; }
+.cb-row { display: flex; align-items: center; gap: calc(var(--peg) * .3); padding: calc(var(--peg) * .06) calc(var(--peg) * .15); border-radius: calc(var(--peg) * .3); }
+.cb-num { flex: none; width: calc(var(--peg) * .6); height: calc(var(--peg) * .6); display: grid; place-items: center; border-radius: 999px; color: var(--teal); font-weight: 700; font-size: calc(var(--peg) * .34); font-variant-numeric: tabular-nums; }
+.cb-pegs { flex: none; display: flex; gap: calc(var(--peg) * .12); }
 .cb-peg { position: relative; flex: none; width: var(--peg); height: var(--peg); border: 0; padding: 0; border-radius: calc(var(--peg) * .24); background: var(--cream); display: grid; place-items: center; color: var(--navy); }
 .cb-peg .cb-sym { width: 70%; height: 70%; display: block; }
-.cb-code { margin-bottom: calc(var(--peg) * .25); }
+.cb-code { margin-bottom: calc(var(--peg) * .18); }
 .cb-hid { background: var(--navy); color: var(--accent); font-weight: 900; font-size: calc(var(--peg) * .5); box-shadow: calc(var(--peg) * .05) calc(var(--peg) * .06) 0 var(--shadow); }
 .cb-shown { background: var(--accent-pale); box-shadow: calc(var(--peg) * .05) calc(var(--peg) * .06) 0 var(--shadow); }
 .cb-later .cb-peg { background: transparent; box-shadow: inset 0 0 0 2px var(--cream); }
@@ -33,23 +45,23 @@
 .cb-win { background: var(--accent); }
 .cb-win .cb-peg { background: var(--white); }
 .cb-win .cb-num { color: var(--navy); font-weight: 900; }
-/* after the round: the best guess's number sits on gold, a guess that broke a clue has its number ringed (a guess can be both) */
+/* after the round: the best guess's number sits on gold; a guess that couldn't have been the code has its number ringed */
 .cb-best .cb-num, .cb-gn { background: var(--accent); color: var(--navy); font-weight: 900; }
 .cb-broke .cb-num { color: var(--navy); font-weight: 900; box-shadow: inset 0 0 0 2px var(--navy); }
-.cb-gn-o { background: transparent; box-shadow: inset 0 0 0 2px var(--navy); }
 .cb-gn { display: inline-block; padding: 0 .55em; border-radius: 999px; line-height: 1.45; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cb-gn-o { background: transparent; box-shadow: inset 0 0 0 2px var(--navy); }
 
 /* clue marks, each with its count: ● right symbol, right spot · ○ right symbol, wrong spot */
-.cb-clue { flex: none; width: calc(var(--peg) * 2.1); display: flex; align-items: center; gap: calc(var(--peg) * .26); font-size: calc(var(--peg) * .5); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.cb-clue { flex: none; width: calc(var(--peg) * 1.9); display: flex; align-items: center; gap: calc(var(--peg) * .24); font-size: calc(var(--peg) * .5); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
 .cb-mk { display: inline-flex; align-items: center; gap: .16em; }
 .cb-mk-i { width: .78em; height: .78em; display: block; flex: none; }
 .cb-mk.cb-zero { opacity: .4; }
-.cb-rest { flex: none; width: calc(var(--peg) * 2.6); color: var(--teal); font-weight: 700; font-size: calc(var(--peg) * .3); white-space: nowrap; }
+.cb-rest { flex: none; width: calc(var(--peg) * 2.4); color: var(--teal); font-weight: 700; font-size: max(calc(var(--peg) * .3), .75rem); white-space: nowrap; }
 .cb-rest b { color: var(--navy); font-weight: 900; font-size: 1.45em; font-variant-numeric: tabular-nums; margin-right: .2em; }
 
 /* one-shot motion */
 .cb-pop { animation: cb-pop .22s cubic-bezier(.34, 1.56, .64, 1); }
-.cb-in .cb-clue { animation: cb-rise .32s ease both; }
+.cb-in .cb-clue, .cb-in .cb-rest { animation: cb-rise .32s ease both; }
 .cb-flip { animation: cb-flip .5s cubic-bezier(.3, .7, .4, 1) both; animation-delay: calc(var(--i) * 90ms); }
 .cb-shake .cb-pegs { animation: cb-shake .3s ease; }
 @keyframes cb-pop { from { transform: scale(.7); } to { transform: none; } }
@@ -57,41 +69,53 @@
 @keyframes cb-flip { from { transform: perspective(30em) rotateY(90deg); } to { transform: none; } }
 @keyframes cb-shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 
-/* ---------- the side: codes left (Board), the key to the marks, hints or the debrief, the symbols ---------- */
-.cb-side { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: clamp(.6rem, 1.8vh, 1.1rem); }
+/* ---------- the panel beside the board: the line of facts, codes left (Board) or the result, the key to the marks,
+   the symbols, the buttons, then hints. At the end of a round: the result, the debrief, then Next code. ---------- */
+.cb-panel { min-width: 0; max-height: 100cqh; position: sticky; top: 0; min-height: 0; display: flex; flex-direction: column; gap: var(--gy); }
+.cb-over .cb-reveal { order: 1; }
+.cb-over .cb-actions { order: 2; }
 .cb-count { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--accent-pale); border-radius: 16px; padding: clamp(.6rem, 1.6vh, 1rem) clamp(.9rem, 1.4vw, 1.4rem); }
 .cb-count-n { margin: 0; font-weight: 900; font-size: clamp(2.2rem, 9vh, 6rem); line-height: 1; font-variant-numeric: tabular-nums; }
+.cb-verdict { flex: none; margin: 0; font-weight: 900; font-size: clamp(1.5rem, 4.4vh, 2.6rem); line-height: 1.1; text-wrap: balance; }
+.cb-verdict span { display: block; margin-top: .4rem; color: var(--teal); font-weight: 700; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; }
+.cb-m-board .cb-verdict { background: var(--accent-pale); border-radius: 16px; padding: clamp(.8rem, 2.2vh, 1.4rem) clamp(.9rem, 1.4vw, 1.4rem); }
 .cb-legend { flex: none; display: flex; flex-wrap: wrap; gap: .3rem 1.4rem; color: var(--teal); font-weight: 700; font-size: .85rem; }
 .cb-legend span { display: inline-flex; align-items: center; gap: .4rem; }
 .cb-legend svg { width: 1.05em; height: 1.05em; color: var(--navy); flex: none; }
-.cb-reveal { background: var(--cream); border-radius: 14px; padding: .75rem 1rem; display: flex; flex-direction: column; gap: .6rem; font-size: 1.05rem; font-weight: 500; min-width: 0; min-height: 0; overflow: auto; flex: 0 1 auto; }
-.cb-reveal:empty { display: none; }
-.cb-tip { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .7rem; }
-.cb-tip > .label { flex: none; width: 6.2rem; }
-.cb-tip-body { flex: 1; min-width: min(100%, 12rem); line-height: 1.45; }
-.cb-tip b { font-weight: 900; }
-.cb-nm { white-space: nowrap; }
-.cb-sym-in { width: 1.05em; height: 1.05em; display: inline-block; vertical-align: -.16em; margin-right: .22em; }
-.cb-try { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; margin-right: .5rem; }
-.cb-try .mini { background: var(--accent); }
-.cb-note { display: block; margin-top: .3rem; color: var(--teal); font-size: .92em; }
-.cb-chain { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .3rem .35rem; }
-.cb-step { background: var(--white); border-radius: 999px; padding: .12rem .7rem; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.cb-arrow { color: var(--teal); font-weight: 700; }
-.cb-grow { flex: 1; min-height: 0; }
 
-.cb-keys { flex: none; display: grid; grid-template-columns: repeat(var(--syms), minmax(0, 1fr)); gap: clamp(.35rem, .9vw, .8rem); width: 100%; max-width: calc(var(--syms) * 5.6rem); align-self: center; padding: 0 6px 6px 0; }
+.cb-keys { flex: none; display: grid; grid-template-columns: repeat(var(--syms), minmax(0, 1fr)); gap: clamp(.35rem, .9vw, .8rem); width: 100%; max-width: calc(var(--syms) * 5.6rem); padding: 0 5px 5px 0; }
 .cb-key { position: relative; aspect-ratio: 1; min-height: 2.6rem; border: 0; padding: 0; border-radius: 22%; background: var(--cream); box-shadow: 3px 4px 0 var(--shadow); display: grid; place-items: center; }
 .cb-key svg { width: 62%; height: 62%; display: block; }
 .cb-key i { position: absolute; top: 7%; left: 11%; font-style: normal; font-weight: 700; font-size: clamp(.62rem, 1.1vh, .8rem); color: var(--teal); }
 .cb-key:active { transform: translateY(2px) scale(.95); box-shadow: 1px 2px 0 var(--shadow); }
 @media (hover: none), (pointer: coarse) { .cb-key i { display: none; } }
-.cb-verdict { flex: none; margin: 0; text-align: center; font-weight: 900; font-size: clamp(1.5rem, 4.6vh, 2.8rem); line-height: 1.1; text-wrap: balance; }
-.cb-verdict span { display: block; margin-top: .45rem; color: var(--teal); font-weight: 700; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; }
 
 .cb-actions { flex: none; display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
-.cb-actions .cb-go { margin-left: auto; min-width: 9rem; padding: .8rem 2rem; font-size: 1.1rem; }
-.cb-m-board .cb-reveal { font-size: 1.2rem; }
+.cb-actions .cb-go { margin-left: auto; min-width: 8rem; padding: .8rem 1.8rem; font-size: 1.1rem; }
+
+.cb-reveal { background: var(--cream); border-radius: 14px; padding: .75rem 1rem; display: flex; flex-direction: column; gap: .6rem; font-size: 1.05rem; font-weight: 500; min-width: 0; min-height: 0; overflow: auto; flex: 0 1 auto; }
+.cb-reveal:empty { display: none; }
+.cb-tip { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .7rem; }
+.cb-tip > .label { flex: none; width: 5.6rem; }
+.cb-tip-body { flex: 1; min-width: min(100%, 12rem); line-height: 1.45; }
+.cb-tip b { font-weight: 900; }
+.cb-nm { white-space: nowrap; }
+.cb-sym-in { width: 1.05em; height: 1.05em; display: inline-block; vertical-align: -.16em; margin-right: .22em; }
+.cb-ci { display: inline-flex; align-items: center; gap: .18em; white-space: nowrap; vertical-align: -.08em; }
+.cb-ci svg { width: .8em; height: .8em; display: block; }
+.cb-ci b { font-weight: 900; }
+.cb-ci b + svg { margin-left: .3em; }
+.cb-try { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; margin-right: .5rem; }
+.cb-try .mini { background: var(--accent); }
+.cb-note { display: block; margin-top: .3rem; color: var(--teal); font-size: .92em; }
+
+/* ---------- Board on a big screen: the panel at the front of the room, every word big enough for the back row ---------- */
+@media (min-width: 1000px) and (min-height: 600px) {
+  .cb-m-board .label, .cb-m-board .cb-legend, .cb-m-board .cb-verdict span, .cb-m-board .cb-key i { font-size: 1.15rem; }
+  .cb-m-board .cb-reveal { font-size: 1.25rem; }
+  .cb-m-board .btn, .cb-m-board .mini { font-size: 1.2rem; }
+  .cb-m-board .cb-tip > .label { width: 8.6rem; }
+}
 
 /* ---------- small pieces: a row of symbols (hints, setup, how to play) and the results card's rows ---------- */
 .cb-minis { display: inline-flex; gap: .25em; vertical-align: middle; }
@@ -107,8 +131,10 @@
 .cb-mk-none { opacity: .4; }
 
 /* ---------- setup and how to play ---------- */
-.cb-lv { display: flex; flex-direction: column; gap: .5rem; background: var(--cream); border-radius: 14px; padding: .75rem 1rem; }
+.cb-lv { display: flex; flex-direction: column; gap: .45rem; background: var(--cream); border-radius: 14px; padding: .75rem 1rem; }
 .cb-lv p { font-weight: 700; color: var(--teal); font-size: .92rem; }
+.cb-lv .cb-lv-n { color: var(--navy); font-weight: 500; font-variant-numeric: tabular-nums; }
+.cb-lv .cb-lv-n b { font-weight: 900; }
 .cb-lv .cb-minis { font-size: 1.15rem; flex-wrap: wrap; }
 .cb-lv .cb-mini { background: var(--white); }
 .howto ol { margin: 0; padding-left: 1.3rem; display: flex; flex-direction: column; gap: .25rem; font-weight: 500; }
@@ -122,24 +148,39 @@
 .cb-howto-keys b { color: var(--navy); }
 @media (hover: none), (pointer: coarse) { .cb-howto-keys { display: none; } }
 
-/* ---------- front page: the art, and a title that fits a phone ---------- */
-.home-card:has(.cb-art) .home-title { font-size: min(clamp(2.4rem, 7.5vh, 4.4rem), 12.5vw); }
+/* ---------- front page art ---------- */
 .cb-art { display: flex; gap: clamp(.4rem, 1.2vw, .7rem); }
 .cb-art-peg { width: clamp(2.8rem, 8.5vh, 4rem); aspect-ratio: 1; border-radius: 12px; background: var(--cream); display: grid; place-items: center; box-shadow: 3px 4px 0 var(--shadow); }
 .cb-art-peg .cb-sym { width: 66%; height: 66%; display: block; }
 .cb-art-hid { background: var(--navy); color: var(--accent); font-weight: 900; font-size: clamp(1.4rem, 4.2vh, 2.1rem); }
 
-/* ---------- portrait screens and phones: one column, the board on top. The board gives way to hints down to
-   a floor, and once a round is over its empty rows go, so the debrief has room. ---------- */
-@media (max-width: 760px), (max-aspect-ratio: 1/1) {
+/* ---------- portrait screens and phones: one column. The board keeps its size (hints never shrink it); only the
+   newest hint shows, and below the board the hints give way first. Play and Daily make room for "N left" only
+   once the round is over, when the empty rows go too. ---------- */
+@media (max-aspect-ratio: 1/1) {
+  .cb {
+    --pw: var(--pw-core);
+    --rest-h: calc(11rem + 5 * var(--gy) + 100cqw / var(--syms)); /* the line of facts, the key, a two-line hint, the symbols, the buttons */
+    --peg-w: calc(100cqw / var(--pw));
+    --peg-h: calc((100cqh - var(--rest-h)) / var(--ph));
+  }
+  .cb.cb-over, .cb.cb-m-board { --pw: var(--pw-full); }
   .cb.cb-over { --ph: var(--ph-done); }
+  .cb:not(.cb-over):not(.cb-m-board) .cb-rest { display: none; }
   .cb-over .cb-later { display: none; }
-  .cb-over .cb-verdict { order: -1; }
-  .cb-main, .cb-m-board .cb-main { display: flex; flex-direction: column; gap: clamp(.55rem, 1.6vh, 1rem); }
-  .cb-field { flex: 1000 1 0; min-height: min(30vh, calc(100cqw * var(--ph) / var(--pw))); max-height: calc(100cqw * var(--ph) / var(--pw)); }
-  .cb-verdict { font-size: 1.6rem; }
-  .cb-side { flex: 1 1 auto; gap: clamp(.5rem, 1.4vh, .9rem); }
-  .cb-reveal { font-size: 1rem; padding: .6rem .8rem; }
+  .cb-stage { display: flex; flex-direction: column; align-items: stretch; gap: var(--gy); }
+  .cb-panel { display: contents; }
+  .cb-field { width: 100%; flex: none; }
+  .cb .cb-meta { order: -2; }
+  .cb .cb-field { order: -1; }
+  .cb .cb-reveal { order: 1; }
+  .cb .cb-keys { order: 3; align-self: center; margin-top: auto; }
+  .cb .cb-actions { order: 4; }
+  .cb-over .cb-actions { margin-top: auto; }
+  .cb-reveal .cb-hint:not(:last-child) { display: none; }
+  .cb-verdict { text-align: center; font-size: 1.6rem; }
+  .cb-reveal { font-size: 1rem; padding: .5rem .8rem; }
+  .cb-note { margin-top: .2rem; }
   .cb-tip > .label { width: 100%; }
   .cb-count { padding: .4rem .9rem; }
   .cb-count-n { font-size: 2.2rem; }

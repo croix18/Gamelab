@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { loadEngine, loadLab, dates } from './harness.mjs';
 
 const NAMES = ['LEVELS', 'LEVEL_IDS', 'allCodes', 'randomCode', 'score', 'filterCodes', 'stillFit', 'provenFacts', 'holds',
-  'pickFact', 'factText', 'strongGuess', 'debrief', 'dailyCode'];
+  'pickFact', 'factText', 'factSource', 'strongGuess', 'searchGuess', 'OPENERS', 'debrief', 'dailyCode',
+  'ladderFor', 'newRound', 'addGuess', 'addHint', 'saveRound', 'loadRound', 'readRun', 'readResult', 'mergeRuns'];
 const E = loadEngine('codebreaker', ['engine.js'], NAMES);
 const { Lab, game } = loadLab({ games: ['codebreaker'] });
 const CB = game('codebreaker');
@@ -153,7 +154,7 @@ test('following the strong-guess hint cracks Medium within 8 guesses every time'
   t.diagnostic(`Easy, all 120 codes: average ${easy.avg.toFixed(2)}, worst ${easy.worst}; Hard, 30 seeded games: average ${h.avg.toFixed(2)}, worst ${h.worst}`);
 });
 
-test('the debrief counts codes left, finds the best guess and catches a guess that broke a clue', () => {
+test('the debrief counts codes left, finds the best guess and explains a guess that broke a clue', () => {
   const secret = code('ABCD');
   const history = ['AABB', 'AAAA', 'CDAB', 'ABCD'].map(g => ({ guess: code(g), clue: A(E.score(secret, code(g))) }));
   const d = E.debrief('medium', history, true);
@@ -163,13 +164,133 @@ test('the debrief counts codes left, finds the best guess and catches a guess th
   assert.equal(d.rows[3].left, 1);
   assert.equal(d.rows[0].broke, -1);
   assert.equal(d.rows[1].broke, 0, 'AAAA scores 2●0○ against AABB, but the clue was 1●1○');
+  assert.deepEqual(A(d.rows[1].would), [2, 0], 'what guess 1 would have shown if AAAA were the code');
   assert.equal(d.rows[3].broke, -1, 'the code itself fits every clue');
   const share = r => (r.before - r.left) / r.before;
-  const best = [0, 1, 2].reduce((b, k) => share(d.rows[k]) > share(d.rows[b]) ? k : b, 0);
-  assert.equal(d.best, best, 'the best guess is the one that ruled out the biggest share, leaving out the winning guess');
+  const fair = [0, 1, 2].filter(k => d.rows[k].broke < 0);
+  assert.equal(d.best, fair.reduce((b, k) => share(d.rows[k]) > share(d.rows[b]) ? k : b, fair[0]),
+    'the best guess ruled out the biggest share, leaving out the winning guess and any guess that broke a clue');
+  assert.ok(d.rows[d.best].broke < 0, 'never both the best guess and a broken clue');
+  assert.equal(d.settled, d.rows.findIndex(r => r.left === 1));
+  /* a guess that rules out the most but breaks a clue is not the best guess */
+  const s2 = code('ABCD'), h2 = ['AAAA', 'BBBB', 'ABCD'].map(g => ({ guess: code(g), clue: A(E.score(s2, code(g))) }));
+  const d2 = E.debrief('medium', h2, true);
+  assert.equal(d2.rows[1].broke, 0);
+  assert.equal(d2.best, 0);
   const shown = E.debrief('medium', history.slice(0, 2), false);
   assert.equal(shown.rows.length, 2);
   assert.ok(shown.best >= 0, 'an unsolved round still has a best guess');
+});
+
+test('the opening guesses written into the engine are the ones the search finds', () => {
+  for (const level of A(E.LEVEL_IDS)) {
+    const found = E.searchGuess(E.allCodes(level), level, true);
+    assert.deepEqual(A(found.code), A(E.OPENERS[level].code), level);
+    assert.equal(found.worst, E.OPENERS[level].worst, level);
+  }
+});
+
+/* ---------- rounds: hints, saving, two tabs, damaged saves ---------- */
+test('hints: before the first guess Hint goes straight to the opening guess, and each guess counts once however many steps it took', () => {
+  for (const board of [false, true]) {
+    const R = E.newRound('medium', code('ABCD'), board);
+    const first = E.addHint(R);
+    assert.equal(first.kind, 'guess', 'no count or fact before any clue');
+    assert.deepEqual(A(first.guess.code), A(E.OPENERS.medium.code));
+    assert.equal(E.addHint(R), null, 'one step before the first guess');
+    assert.equal(R.hints, 1);
+    E.addGuess(R, code('AABB'));
+    assert.deepEqual(A(E.ladderFor(board, 1)), board ? ['fact', 'guess'] : ['count', 'fact', 'guess']);
+    const kinds = [];
+    for (let t; (t = E.addHint(R));) kinds.push(t.kind);
+    assert.deepEqual(kinds, board ? ['fact', 'guess'] : ['count', 'fact', 'guess']);
+    assert.equal(R.hints, 2, 'all the steps on guess 2 count as one hint');
+    E.addGuess(R, code('CCDD'));
+    assert.equal(R.rung, 0, 'a new guess starts the ladder again');
+    E.addGuess(R, code('ABCD'));
+    assert.ok(R.over && R.solved);
+    assert.equal(R.hints, 2, 'guesses with no help add nothing');
+    assert.equal(E.addHint(R), null, 'no hints once the round is over');
+  }
+});
+
+test('a round saved mid-guess comes back with its guesses, its place on the hint ladder and the hints on screen', () => {
+  const rnd = Lab.rng('save|round');
+  for (const level of A(E.LEVEL_IDS)) {
+    for (let i = 0; i < 12; i++) {
+      const secret = A(E.randomCode(level, rnd)), R = E.newRound(level, secret, i % 2 === 1);
+      for (let k = 0; k < 1 + i % 3 && !R.over; k++) { E.addHint(R); E.addGuess(R, A(E.randomCode(level, rnd))); }
+      if (R.over) continue;
+      for (let k = 0; k <= i % 3; k++) E.addHint(R);
+      const saved = JSON.parse(JSON.stringify(E.saveRound(R)));
+      const read = E.readRun(saved, { board: R.board });
+      assert.ok(read, `${level}: a saved round reads back`);
+      const B = E.loadRound(read, secret, R.board);
+      assert.deepEqual(A(B.history, h => key(h.guess) + A(h.clue).join('')), A(R.history, h => key(h.guess) + A(h.clue).join('')));
+      assert.equal(B.hints, R.hints);
+      assert.equal(B.rung, R.rung);
+      assert.equal(B.codes.length, R.codes.length);
+      assert.deepEqual(A(B.tips, t => t.kind), A(R.tips, t => t.kind), 'the same hints on screen');
+      B.tips.forEach((t, j) => {
+        if (t.kind === 'fact') assert.equal(JSON.stringify(t.fact), JSON.stringify(R.tips[j].fact));
+        if (t.kind === 'guess') assert.equal(key(t.guess.code), key(R.tips[j].guess.code));
+      });
+      assert.equal(B.facts.length, R.facts.length, 'facts already shown stay shown');
+    }
+  }
+});
+
+test('two tabs on one Daily: the longer list of guesses and the most hints win, so a second tab cannot launder hints', () => {
+  const date = '2026-11-04', secret = A(CB.daily(date)), want = { board: false, level: 'medium', date };
+  const save = R => JSON.parse(JSON.stringify(Object.assign(E.saveRound(R), { date, ms: 1000 })));
+  /* tab A takes every hint before guessing; tab B, opened earlier, has nothing */
+  const tabA = E.newRound('medium', secret, false), tabB = E.newRound('medium', secret, false);
+  E.addHint(tabA);
+  const merged = E.mergeRuns(E.readRun(save(tabB), want), E.readRun(save(tabA), want));
+  assert.equal(merged.hints, 1, "tab A's hint counts in tab B");
+  const B = E.loadRound(merged, secret, false);
+  E.addGuess(B, secret);
+  assert.ok(B.solved && B.hints === 1, 'solving in tab B is solved with hints');
+  /* tab A guesses on; tab B catches up to the longer list before its own guess */
+  E.addGuess(tabA, code('AABB')); E.addHint(tabA); E.addHint(tabA);
+  const m2 = E.mergeRuns(E.readRun(save(tabB), want), E.readRun(save(tabA), want));
+  assert.equal(m2.guesses.length, 1);
+  assert.equal(m2.rung, 2, "tab A's place on the ladder comes along");
+  assert.equal(m2.hints, 2);
+  assert.equal(m2.ms, 1000);
+  assert.equal(E.mergeRuns(m2, null), m2);
+  /* merging either way round agrees */
+  const m3 = E.mergeRuns(E.readRun(save(tabA), want), E.readRun(save(tabB), want));
+  assert.equal(JSON.stringify([m3.guesses, m3.hints, m3.rung]), JSON.stringify([m2.guesses, m2.hints, m2.rung]));
+});
+
+test('a damaged save is dropped, never trusted: results, Daily progress and dailyDone', () => {
+  const date = '2026-11-04';
+  const good = { date, rows: [[1, 1], [4, 0]], outcome: 'helped', hints: 1, ms: 5000, len: 4, limit: 8 };
+  assert.ok(E.readResult(good, date));
+  const bad = [
+    null, 7, 'x', [], { rows: [[1, 2]], outcome: 'clean' }, { ...good, date: 20261104 }, { ...good, date: '2026-11-03' },
+    { ...good, rows: [null, [4, 0]] }, { ...good, rows: [[1, 2], [4, 0, 1]] }, { ...good, rows: [[3, 1], [4, 0]] }, { ...good, rows: [[5, 0]] },
+    { ...good, rows: 'abc' }, { ...good, outcome: 'won' }, { ...good, outcome: 'clean' }, { ...good, outcome: 'shown' },
+    { ...good, rows: [[1, 1], [2, 0]] }, { ...good, hints: -1 }, { ...good, hints: 9 }, { ...good, hints: 1.5 }, { ...good, ms: 'soon' },
+    { ...good, ms: Infinity }, { ...good, rows: new Array(9).fill([0, 0]).concat([[4, 0]]) }
+  ];
+  for (const b of bad) assert.equal(E.readResult(b, date), null, JSON.stringify(b));
+  const run = { level: 'medium', date, guesses: [[0, 0, 1, 1]], hints: 1, rung: 1, tips: [{ kind: 'count' }], facts: [], ms: 100 };
+  assert.ok(E.readRun(run, { board: false, level: 'medium', date }));
+  const badRuns = [
+    { ...run, date: 1 }, { ...run, level: 'impossible' }, { ...run, guesses: [[0, 0, 1]] }, { ...run, guesses: [[0, 0, 1, 9]] },
+    { ...run, guesses: [null] }, { ...run, hints: 3 }, { ...run, rung: 2 }, { ...run, tips: [{ kind: 'guess' }] }, { ...run, tips: [] },
+    { ...run, facts: [{ kind: 'none', sym: 9 }] }, { ...run, facts: [{ kind: 'spot', sym: 1 }] }, { ...run, facts: 'none' }, { ...run, ms: -5 },
+    { ...run, rung: 2, tips: [{ kind: 'count' }, { kind: 'fact', fact: { kind: 'odd', sym: 0 } }] }
+  ];
+  for (const b of badRuns) assert.equal(E.readRun(b, { board: false, level: 'medium', date }), null, JSON.stringify(b));
+  /* the hub's tick for a day is the same check */
+  const { game: g, mem } = loadLab({ games: ['codebreaker'] });
+  mem.set('gamelab.codebreaker.daily.' + date, JSON.stringify({ rows: [[1, 2]], outcome: 'clean' }));
+  assert.equal(g('codebreaker').dailyDone(date), false, 'a damaged result is not a done Daily');
+  mem.set('gamelab.codebreaker.daily.' + date, JSON.stringify(good));
+  assert.equal(g('codebreaker').dailyDone(date), true);
 });
 
 test('a year of Dailies: valid Medium codes, the same on every device, different day to day', () => {
