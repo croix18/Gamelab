@@ -398,7 +398,9 @@
       const hints = result.results.reduce((n, r) => n + (r.hints || 0), 0);
       const sh = Lab.results({
         game: 'Make 24',
-        sub: 'Daily · ' + Lab.dateWords(result.date) + (replay ? ' · replay' : ''),
+        sub: 'Daily · ' + Lab.dateWords(result.date),
+        replay,
+        streak: true,
         squares: result.results.map(r => r.status),
         stats: [[solved + ' of ' + result.results.length, 'Solved'], [Lab.clock(result.ms), 'Time'], [String(hints), hints === 1 ? 'Hint' : 'Hints']]
       }, { done: 'Done', onClose: ctx.home, extra: '<button class="btn" type="button" data-again>Play again</button>' });
