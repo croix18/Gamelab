@@ -145,8 +145,6 @@ button { cursor: pointer; touch-action: manipulation; -webkit-user-select: none;
   flex: 1; display: flex; min-height: 0;
   --t48-move: 110ms; /* keep in step with MOVE_MS in game.js */
   --t48-eqf: clamp(1.05rem, 3vh, 2.2rem);
-  --t48-eqh: calc(var(--t48-eqf) * 2.1);
-  --t48-pgap: clamp(.35rem, 1.1vh, .8rem);
 }
 
 /* ---------- tiles: sand and pale turquoise, deepening through turquoise and teal to navy; 2048 is gold ---------- */
@@ -165,24 +163,27 @@ button { cursor: pointer; touch-action: manipulation; -webkit-user-select: none;
 .t48-pw { white-space: nowrap; }
 sup.t48-ex { font-size: .56em; line-height: 0; position: relative; top: -.68em; margin-left: .03em; vertical-align: baseline; letter-spacing: 0; }
 
-/* ---------- the stage: one column on phones, the board beside its panel on wider screens ---------- */
+/* ---------- the stage: one column on phones; on wider screens the board, with its panel beside it ---------- */
 .t48-stage {
   flex: 1; min-width: 0; min-height: 0; container-type: size;
   display: flex; flex-direction: column; gap: clamp(.55rem, 1.5vh, 1rem);
   padding: clamp(.9rem, 2.2vh, 1.5rem) clamp(.9rem, 2vw, 1.9rem);
+  touch-action: none; /* no swipe anywhere on the game scrolls or zooms the page */
 }
 .t48-head { display: flex; flex-direction: column; gap: clamp(.45rem, 1.2vh, .8rem); }
 .t48-stats { display: flex; flex-wrap: wrap; gap: .4rem clamp(1.2rem, 2.4vw, 2.2rem); }
 .t48-stat { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
 .t48-stat b { font-weight: 900; font-size: clamp(1.45rem, 4.4vh, 2.7rem); line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.t48-bar { height: 8px; border-radius: 999px; background: var(--accent-pale); overflow: hidden; }
-.t48-bar i { display: block; height: 100%; background: var(--accent); border-radius: inherit; transform-origin: left; transition: transform .2s ease; }
+/* slides left, with its own bar in a neutral colour */
+.t48-left { min-width: 6.2rem; }
+.t48-lbar { display: block; height: 6px; margin-top: .3rem; border-radius: 999px; background: #EEE6D7; overflow: hidden; }
+.t48-lbar i { display: block; height: 100%; border-radius: inherit; background: #8D99A6; transform-origin: left; transition: transform .2s ease; }
 
 .t48-play {
   flex: 1 1 0; min-height: 0; container-type: size;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--t48-pgap);
-  touch-action: none; -webkit-user-select: none; user-select: none;
-  --t48-s: min(100cqw, 100cqh - var(--t48-eqh) - var(--t48-pgap));
+  display: flex; align-items: center; justify-content: center;
+  -webkit-user-select: none; user-select: none;
+  --t48-s: min(100cqw, 100cqh);
 }
 
 /* ---------- the board ---------- */
@@ -222,26 +223,29 @@ sup.t48-ex { font-size: .56em; line-height: 0; position: relative; top: -.68em; 
 @keyframes t48-in { from { transform: scale(.25); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes t48-nudge { 40% { transform: translate(var(--t48-nx), var(--t48-ny)); } }
 
-/* ---------- the merge line under the board ---------- */
-.t48-eq { flex: none; height: var(--t48-eqh); max-width: 100%; display: flex; align-items: center; justify-content: center; font-size: var(--t48-eqf); }
-.t48-sum { display: inline-flex; align-items: center; gap: .32em; font-weight: 900; animation: t48-fade .2s ease var(--t48-move) both; }
+/* ---------- the merge, as an equation: under the board on phones, beside it on wider screens ---------- */
+.t48-eq { flex: none; min-height: calc(var(--t48-eqf) * 2.1); max-width: 100%; display: flex; align-items: center; justify-content: center; font-size: var(--t48-eqf); }
+.t48-sum { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .3em .32em; font-weight: 900; transition: opacity .25s ease; animation: t48-fade .18s ease backwards; }
+.t48-ln { display: inline-flex; align-items: center; gap: .32em; white-space: nowrap; }
 .t48-q { display: inline-grid; place-items: center; min-width: 2em; height: 1.6em; padding: 0 .42em; border-radius: .34em; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .t48-op { color: var(--teal); }
+.t48-prod { display: inline-flex; align-items: center; gap: .2em; }
+.t48-dim .t48-sum { opacity: .35; } /* the latest merge stays up, dimmed, until the next one */
 .t48-tip { font-size: clamp(.95rem, 2.2vh, 1.15rem); font-weight: 500; color: var(--teal); text-align: center; }
 .t48-tip-touch { display: none; }
 @media (hover: none), (pointer: coarse) { .t48-tip-touch { display: inline; } .t48-tip-keys { display: none; } }
-@keyframes t48-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes t48-fade { from { opacity: .3; } }
 
 /* ---------- hint, end of game, actions ---------- */
 .t48-info { min-height: 3.9rem; display: flex; flex-direction: column; justify-content: center; }
-.t48-hint { background: var(--accent-pale); border-radius: 14px; padding: .65rem .9rem .65rem .65rem; }
+.t48-hint { background: var(--cream); border-radius: 14px; padding: .65rem .9rem .65rem .65rem; }
+.t48-hint .label { display: block; margin: 0 0 .3rem .15rem; }
 .t48-hint p { margin: 0; display: flex; align-items: center; gap: .7rem; font-size: clamp(1rem, 2.4vh, 1.3rem); font-weight: 500; line-height: 1.25; }
 .t48-hint b { font-weight: 900; }
 .t48-hint .t48-arrow { flex: none; width: 2.3em; height: 2.3em; border-radius: 50%; background: var(--accent); color: var(--navy); }
 .t48-hint .t48-arrow svg { width: 1.15em; height: 1.15em; }
 .t48-end { margin: 0; font-weight: 900; font-size: clamp(1.45rem, 3.8vh, 2.3rem); line-height: 1.1; }
 .t48-actions { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
-.t48-actions .t48-main { margin-left: auto; padding-inline: 1.7rem; }
 .t48-arrow { display: inline-grid; place-items: center; vertical-align: middle; }
 .t48-arrow svg { width: 1em; height: 1em; display: block; }
 .t48-to-up svg { transform: rotate(90deg); }
@@ -249,7 +253,7 @@ sup.t48-ex { font-size: .56em; line-height: 0; position: relative; top: -.68em; 
 .t48-to-down svg { transform: rotate(-90deg); }
 
 /* ---------- Board: arrows the teacher taps ---------- */
-.t48-pad { --t48-pb: clamp(3.2rem, 7.6vh, 5.4rem); display: grid; grid-template-columns: repeat(3, var(--t48-pb)); grid-template-areas: ". up ." "left . right" ". down ."; gap: .35rem; justify-content: center; }
+.t48-pad { --t48-pb: clamp(3rem, 6.4vh, 4.6rem); display: grid; grid-template-columns: repeat(3, var(--t48-pb)); grid-template-areas: ". up ." "left . right" ". down ."; gap: .35rem; justify-content: center; }
 .t48-pad-btn { width: var(--t48-pb); height: var(--t48-pb); border: 0; border-radius: 50%; padding: 0; background: var(--accent-pale); color: var(--navy); display: grid; place-items: center; }
 .t48-pad-btn .t48-arrow svg { width: calc(var(--t48-pb) * .42); height: calc(var(--t48-pb) * .42); }
 .t48-pad-btn[data-dir="up"] { grid-area: up; }
@@ -264,18 +268,22 @@ sup.t48-ex { font-size: .56em; line-height: 0; position: relative; top: -.68em; 
 @media (min-aspect-ratio: 1/1) and (min-width: 640px) {
   .t48-game { --t48-side: clamp(15rem, 27vw, 26rem); --t48-cgap: clamp(1.5rem, 3.6vw, 4.5rem); }
   .t48-stage {
-    display: grid; grid-template-columns: auto var(--t48-side); grid-template-rows: auto minmax(0, 1fr) auto auto;
-    grid-template-areas: "play head" "play info" "play pad" "play actions";
-    column-gap: var(--t48-cgap); row-gap: clamp(.8rem, 2.2vh, 1.5rem); justify-content: center;
+    display: grid; grid-template-columns: auto var(--t48-side); grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+    grid-template-areas: "play head" "play eq" "play info" "play pad" "play actions" "play .";
+    column-gap: var(--t48-cgap); row-gap: clamp(.8rem, 2.4vh, 1.6rem); justify-content: center;
   }
   .t48-play {
     grid-area: play; container-type: normal; align-self: center;
-    --t48-s: min(100cqh - var(--t48-eqh) - var(--t48-pgap), 100cqw - var(--t48-side) - var(--t48-cgap));
-    width: var(--t48-s);
+    --t48-s: min(100cqh, 100cqw - var(--t48-side) - var(--t48-cgap));
+    width: var(--t48-s); height: var(--t48-s);
   }
   .t48-head { grid-area: head; }
-  .t48-info { grid-area: info; justify-content: flex-start; min-height: 0; }
-  .t48-pad { grid-area: pad; }
+  /* the equation, big, in the panel: one line per step */
+  .t48-eq { grid-area: eq; justify-content: flex-start; min-height: 0; font-size: clamp(1.3rem, min(4.8vh, calc(var(--t48-side) / 8.6)), 3.8rem); }
+  .t48-sum { flex-direction: column; align-items: flex-start; gap: .28em; }
+  .t48-tip { text-align: left; }
+  .t48-info { grid-area: info; justify-content: flex-start; min-height: 6.2rem; }
+  .t48-pad { grid-area: pad; justify-content: start; }
   .t48-actions { grid-area: actions; }
 }
 
@@ -287,38 +295,51 @@ sup.t48-ex { font-size: .56em; line-height: 0; position: relative; top: -.68em; 
 }
 .t48-mini > span {
   width: var(--t48-m); height: var(--t48-m); border-radius: calc(var(--t48-m) * .18);
-  display: grid; place-items: center; font-weight: 900; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
-  font-size: calc(var(--t48-m) * .44);
+  display: grid; place-items: center; font-weight: 900; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+  font-size: calc(var(--t48-m) * .5);
 }
 :where(.t48-mini > span) { background: var(--t48-hole); } /* an empty square; a tile's own color wins */
-.t48-mini > span[data-d="d2"] { font-size: calc(var(--t48-m) * .4); }
-.t48-mini > span[data-d="d3"] { font-size: calc(var(--t48-m) * .32); }
-.t48-mini > span[data-d="d4"] { font-size: calc(var(--t48-m) * .25); }
-.t48-mini > span[data-d="d5"] { font-size: calc(var(--t48-m) * .2); }
-.t48-mini > span[data-d="p1"] { font-size: calc(var(--t48-m) * .38); }
-.t48-mini > span[data-d="p2"] { font-size: calc(var(--t48-m) * .32); }
+.t48-mini > span[data-d="d2"] { font-size: calc(var(--t48-m) * .44); }
+.t48-mini > span[data-d="d3"] { font-size: calc(var(--t48-m) * .35); }
+.t48-mini > span[data-d="d4"] { font-size: calc(var(--t48-m) * .28); }
+.t48-mini > span[data-d="d5"] { font-size: calc(var(--t48-m) * .22); }
+.t48-mini > span[data-d="p1"] { font-size: calc(var(--t48-m) * .42); }
+.t48-mini > span[data-d="p2"] { font-size: calc(var(--t48-m) * .35); }
+.t48-mini > span.t48-key { position: relative; z-index: 1; box-shadow: 0 0 0 calc(var(--t48-m) * .06) var(--white), 0 0 0 calc(var(--t48-m) * .13) var(--navy); }
 .t48-results .t48-mini { margin: .1rem auto .2rem; }
 .t48-results .r-stats { gap: .4rem 1.5rem; }
+.r-stat .t48-pw { font-size: 1em; font-weight: inherit; color: inherit; letter-spacing: 0; text-transform: none; }
+/* "Look-ahead player: 2,004", and a cheer when the student beats it */
+.t48-vs { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: .35rem .6rem; font-size: 1.05rem; font-weight: 700; color: var(--teal); }
+.t48-vs b { color: var(--navy); font-weight: 900; font-variant-numeric: tabular-nums; }
+.t48-won { background: var(--accent); color: var(--navy); font-weight: 900; border-radius: 999px; padding: .25rem .85rem; }
+.t48-beat .t48-won { animation: t48-pop .45s ease both; }
 
 .t48-sheet h2 sup.t48-ex, .t48-end sup.t48-ex { top: -.72em; }
-.t48-review { width: min(40rem, 100%); }
+.t48-review { width: min(72rem, 100%); }
 .t48-review .r-stats { justify-content: flex-start; }
 .t48-costs-label { margin-top: .4rem; }
-.t48-costs { display: flex; flex-direction: column; gap: .6rem; }
-.t48-cost { background: var(--cream); border-radius: 14px; padding: .7rem; display: flex; align-items: flex-start; gap: .9rem; }
-.t48-cost .t48-mini { --t48-m: clamp(1.4rem, 3.8vh, 2rem); flex: none; }
-.t48-cost-text { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
-.t48-move { display: flex; align-items: center; gap: .3rem; font-weight: 500; color: var(--teal); }
-.t48-move b { color: var(--navy); font-weight: 900; }
-.t48-move .t48-arrow { margin-left: .1rem; color: var(--navy); }
-@media (min-width: 640px) {
-  .t48-costs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; }
-  .t48-cost { flex-direction: column; align-items: center; text-align: center; }
-  .t48-cost-text { align-items: center; }
-}
+/* each costly slide: the board after it, beside the board after the better slide */
+.t48-costs { display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem; }
+.t48-cost { --t48-cm: clamp(1.4rem, 3.9vh, 2.3rem); width: min-content; max-width: 100%; background: var(--cream); border-radius: 14px; padding: .75rem .8rem .85rem; display: flex; flex-direction: column; align-items: center; gap: .5rem; text-align: center; }
+.t48-cost .t48-mini { --t48-m: var(--t48-cm); }
+.t48-pair { display: flex; gap: .8rem; }
+.t48-pair figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: .35rem; }
+.t48-pair figcaption { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; font-weight: 500; color: var(--teal); }
+.t48-pair figcaption b { color: var(--navy); font-weight: 900; }
+.t48-pair figcaption .t48-arrow { margin-left: .1rem; color: var(--navy); }
 .t48-why, .t48-none, .t48-wait { font-weight: 500; }
-.r-stat .t48-pw { font-size: 1em; font-weight: inherit; color: inherit; letter-spacing: 0; text-transform: none; }
+.t48-none, .t48-wait { width: 100%; text-align: center; }
 .t48-wait { color: var(--teal); }
+@media (max-width: 480px) { .t48-cost { --t48-cm: 1.75rem; } }
+/* the Board's review: big enough to read across a classroom */
+.t48-big { width: min(110rem, 100%); }
+.t48-big .t48-cost { --t48-cm: clamp(1.8rem, min(5.2vh, 2.85vw), 3.6rem); padding: 1rem 1.1rem 1.1rem; gap: .7rem; }
+.t48-big h2 { font-size: clamp(1.45rem, 4.2vh, 3rem); }
+.t48-big .label, .t48-big .r-stat span { font-size: clamp(.72rem, 2.25vh, 1.6rem); }
+.t48-big .r-stat b { font-size: clamp(1.7rem, 5vh, 3.6rem); }
+.t48-big .t48-why, .t48-big .t48-none, .t48-big .t48-wait, .t48-big figcaption { font-size: clamp(1rem, 2.6vh, 2rem); }
+.t48-big .btn { font-size: clamp(1rem, 2.4vh, 1.8rem); min-height: 2.4em; padding: .5em 1.3em; }
 .t48-cheer { align-items: center; text-align: center; }
 .t48-cheer .sheet-foot { justify-content: center; }
 
@@ -772,7 +793,7 @@ function tileFor(board, seed, k) {
 
 /* A game: its seed, the board, the score, its slides so far ('l', 'u', 'r', 'd') and k, the tiles dealt. */
 function newGame(seed) {
-  const g = { seed: seed >>> 0, board: new Array(CELLS).fill(0), k: 0, score: 0, slides: 0, moves: '' };
+  const g = { seed: seed >>> 0, board: new Array(CELLS).fill(0), k: 0, score: 0, slides: 0, moves: '', lastMerge: 0, mergeAt: 0 };
   for (let i = 0; i < 2; i++) { const t = tileFor(g.board, g.seed, g.k++); g.board[t.at] = t.exp; }
   return g;
 }
@@ -791,6 +812,7 @@ function makeSlide(g, dir) {
   g.score += r.score;
   g.slides++;
   g.moves += DIR_CH[dir];
+  if (r.merges.length) { g.lastMerge = biggestMerge(r.merges); g.mergeAt = g.slides; } /* the latest merge, and the slide that made it */
   return r;
 }
 /* Rebuilds a game from its seed and its slides; stops at the first slide that can't be made. */
@@ -956,20 +978,20 @@ function analyze(board, depth) {
 const lookMove = board => analyze(board, LOOK_DEPTH).best;
 const carefulMove = board => analyze(board, CAREFUL_DEPTH).best;
 
-/* ---------- why a slide is good, in a few words ---------- */
-function inCorner(board) {
-  const top = maxExp(board);
-  return top > 0 && (board[0] === top || board[3] === top || board[12] === top || board[15] === top);
-}
-function pairCount(board) {
-  let n = 0;
+/* ---------- why a slide is good: concrete reasons that name the tiles ---------- */
+const CORNERS = [0, 3, 12, 15];
+/* every pair of equal tiles side by side: { exp, cells } */
+function pairsIn(board) {
+  const out = [];
   for (let i = 0; i < CELLS; i++) {
-    if (!board[i]) continue;
-    if (i % 4 < 3 && board[i] === board[i + 1]) n++;
-    if (i < 12 && board[i] === board[i + 4]) n++;
+    const e = board[i];
+    if (!e) continue;
+    if (i % 4 < 3 && board[i + 1] === e) out.push({ exp: e, cells: [i, i + 1] });
+    if (i < 12 && board[i + 4] === e) out.push({ exp: e, cells: [i, i + 4] });
   }
-  return n;
+  return out;
 }
+/* how far the rows and columns are from rising or falling steadily */
 function disorder(board) {
   let n = 0;
   for (const dir of ['left', 'up']) {
@@ -984,28 +1006,62 @@ function disorder(board) {
   }
   return n;
 }
-function features(board, dir) {
-  const r = slide(board, dir);
-  return { moved: r.moved, merge: biggestMerge(r.merges), empty: emptyCount(r.board), corner: inCorner(r.board), pairs: pairCount(r.board), disorder: disorder(r.board) };
+/* What one slide does, before its new tile arrives. */
+function outcome(board, dir) {
+  const r = slide(board, dir), top = maxExp(r.board);
+  return {
+    moved: r.moved, board: r.board, merges: r.merges, merge: biggestMerge(r.merges), empty: emptyCount(r.board), top,
+    corner: top ? CORNERS.filter(i => r.board[i] === top) : [], pairs: pairsIn(r.board), disorder: disorder(r.board)
+  };
 }
-/* Why `dir` beats the other slides (or, given `than`, that one slide), as a reason code:
-   only | corner | into-corner | merge (with exp) | space | setup | order | ahead */
-function reason(board, dir, than) {
-  const me = features(board, dir);
-  const others = (than ? [than] : DIRS.filter(d => d !== dir)).map(d => features(board, d)).filter(f => f.moved);
-  if (!others.length) return { why: 'only' };
-  if (me.corner && others.some(f => !f.corner)) return { why: inCorner(board) ? 'corner' : 'into-corner' };
-  if (me.merge >= 3 && others.every(f => f.merge < me.merge)) return { why: 'merge', exp: me.merge };
-  if (others.every(f => f.empty < me.empty)) return { why: 'space' };
-  if (others.every(f => f.pairs < me.pairs)) return { why: 'setup' };
-  if (others.every(f => f.disorder > me.disorder)) return { why: 'order' };
-  return { why: 'ahead' };
+/* Why slide `dir` beats slide `than` (the slide that was made, or the next-best slide), with the tiles it is about.
+   { why: 'only' | 'merge' | 'corner' | 'into-corner' | 'merges' | 'pair' | 'space' | 'order' | 'ahead',
+     exp?, n?, m?, fresh?, kept?, mark: { a: cells to outline after dir, b: cells to outline after than } }
+   Concrete reasons come first; 'ahead' (safest a few slides ahead) is the last resort. With `own` (a hint), when
+   nothing sets the two slides apart, a concrete thing the slide does comes before 'order' and 'ahead'. */
+function explain(board, dir, than, own) {
+  const A = outcome(board, dir), B = than ? outcome(board, than) : null;
+  const none = { a: [], b: [] };
+  if (!B || !B.moved) return { why: 'only', mark: none };
+  const top = maxExp(board);
+  const madeAt = (o, e) => o.merges.filter(x => x.exp === e).map(x => x.at);
+  /* it makes a bigger tile (an 8 or more) */
+  if (A.merge >= 3 && A.merge > B.merge) return { why: 'merge', exp: A.merge, mark: { a: madeAt(A, A.merge), b: [] } };
+  /* it keeps the biggest tile (an 8 or more) in a corner, or puts it there, and the other slide doesn't */
+  if (top >= 3 && A.top === top && A.corner.length && !B.corner.length) {
+    const was = CORNERS.some(i => board[i] === top);
+    return { why: was ? 'corner' : 'into-corner', exp: top, mark: { a: A.corner.slice(0, 1), b: [B.board.indexOf(B.top)] } };
+  }
+  /* it makes more merges */
+  if (A.merges.length >= 2 && A.merges.length > B.merges.length) return { why: 'merges', n: A.merges.length, mark: { a: A.merges.map(x => x.at), b: [] } };
+  /* it lines up the biggest pair of equal tiles that the other slide doesn't */
+  const has = (pairs, e) => pairs.some(p => p.exp === e);
+  const pair = A.pairs.filter(p => p.exp >= 2 && !has(B.pairs, p.exp)).sort((x, y) => y.exp - x.exp)[0];
+  if (pair) {
+    const fresh = pair.cells.some(c => A.merges.some(x => x.at === c && x.exp === pair.exp));
+    return { why: 'pair', exp: pair.exp, fresh, kept: !fresh && has(pairsIn(board), pair.exp), mark: { a: pair.cells, b: [] } };
+  }
+  if (A.empty > B.empty) return { why: 'space', n: A.empty, m: B.empty, mark: none };
+  if (A.merge > B.merge) return { why: 'merge', exp: A.merge, mark: { a: madeAt(A, A.merge), b: [] } };
+  if (own) {
+    const made = A.pairs.filter(p => p.exp >= 2 && p.cells.some(c => A.merges.some(x => x.at === c && x.exp === p.exp))).sort((x, y) => y.exp - x.exp)[0];
+    if (A.merge >= 3) return { why: 'merge', exp: A.merge, mark: { a: madeAt(A, A.merge), b: [] } };
+    if (made) return { why: 'pair', exp: made.exp, fresh: true, mark: { a: made.cells, b: [] } };
+    if (A.merges.length >= 2) return { why: 'merges', n: A.merges.length, mark: { a: A.merges.map(x => x.at), b: [] } };
+    if (top >= 3 && A.top === top && A.corner.length && CORNERS.some(i => board[i] === top)) return { why: 'corner', exp: top, mark: { a: A.corner.slice(0, 1), b: [] } };
+    if (A.merge) return { why: 'merge', exp: A.merge, mark: { a: madeAt(A, A.merge), b: [] } };
+  }
+  if (A.disorder <= B.disorder) return { why: 'order', mark: none };
+  return { why: 'ahead', mark: none };
 }
-/* The hint: the look-ahead player's slide and why. */
+/* The hint: the look-ahead player's slide, and why it beats the next-best slide. */
 function suggest(board) {
   const a = analyze(board, LOOK_DEPTH);
-  return a.best ? Object.assign({ dir: a.best }, reason(board, a.best)) : null;
+  if (!a.best) return null;
+  const next = DIRS.filter(d => d !== a.best && a.values[d] !== null).sort((x, y) => a.values[y] - a.values[x])[0];
+  return Object.assign({ dir: a.best }, explain(board, a.best, next, true));
 }
+
 /* ---------- whole games: the Daily card, the tests and the Challenge limits ---------- */
 /* One slide of game g by a player ('look' or 'careful'); false once the board is stuck. */
 function botSlide(g, who) {
@@ -1035,8 +1091,8 @@ function lookaheadDaily(seed, slides) {
 }
 
 /* ===== 2048: the Game Lab edition =====
-   Play (Classic and Challenge), Daily and Board on engine.js. Tiles show numbers (32) or powers (2⁵),
-   and the line under the board shows each slide's biggest merge as an equation. */
+   Play (Classic and Challenge), Daily and Board on engine.js. Tiles show numbers (32) or powers (2⁵), and each slide's
+   biggest merge shows as an equation: 32 + 32 = 64, or in powers 2⁵ + 2⁵ = 2¹ · 2⁵ = 2⁶, the product rule. */
 (function () {
   'use strict';
   const ID = '2048';
@@ -1049,47 +1105,47 @@ function lookaheadDaily(seed, slides) {
   const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5.5M11.5 5.5 5 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const arrow = dir => '<span class="t48-arrow t48-to-' + dir + '">' + ARROW + '</span>';
 
-  /* ---------- showing tiles ---------- */
+  /* ---------- tiles and numbers ---------- */
   const fmt = n => Number(n).toLocaleString('en-US');
+  const plural = (n, word) => fmt(n) + ' ' + word + (n === 1 ? '' : 's');
   const sup = e => '<span class="t48-pw">2<sup class="t48-ex">' + e + '</sup></span>';
   const tileHTML = (e, powers) => powers ? sup(e) : String(VALUE[e]);
   const tileSay = (e, powers) => powers ? '2 to the ' + e : String(VALUE[e]);
-  const tileWords = (e, powers) => powers ? sup(e) : (String(VALUE[e])[0] === '8' ? 'an ' : 'a ') + VALUE[e];
+  const aTile = (e, powers) => powers ? sup(e) : (String(VALUE[e])[0] === '8' ? 'an ' : 'a ') + VALUE[e];
+  const twoTiles = (e, powers) => 'two ' + (powers ? sup(e) + ' tiles' : VALUE[e] + 's');
   const tileSize = (e, powers) => powers ? (e >= 10 ? 'p2' : 'p1') : 'd' + String(VALUE[e]).length;
   const tileClass = e => 't48-e' + Math.min(e, 12);
-  function miniHTML(board, powers, label) {
-    return '<div class="t48-mini" role="img" aria-label="' + Lab.esc(label) + '">' + Array.from(board, e => e
-      ? '<span class="' + tileClass(e) + '" data-d="' + tileSize(e, powers) + '">' + tileHTML(e, powers) + '</span>'
+  /* a small board; `keys` are the squares to outline */
+  function miniHTML(board, powers, label, keys) {
+    keys = keys || [];
+    return '<div class="t48-mini" role="img" aria-label="' + Lab.esc(label) + '">' + Array.from(board, (e, i) => e
+      ? '<span class="' + tileClass(e) + (keys.indexOf(i) >= 0 ? ' t48-key' : '') + '" data-d="' + tileSize(e, powers) + '">' + tileHTML(e, powers) + '</span>'
       : '<span></span>').join('') + '</div>';
   }
+  /* a slide's biggest merge as an equation; in powers it shows the product rule */
   function eqHTML(e, powers) {
     const chip = x => '<span class="t48-q ' + tileClass(x) + '">' + tileHTML(x, powers) + '</span>';
-    return chip(e - 1) + '<span class="t48-op">+</span>' + chip(e - 1) + '<span class="t48-op">=</span>' + chip(e);
+    const op = s => '<span class="t48-op">' + s + '</span>';
+    return '<span class="t48-ln">' + chip(e - 1) + op('+') + chip(e - 1) + '</span><span class="t48-ln">' + op('=') +
+      (powers ? '<span class="t48-prod">' + sup(1) + op('·') + sup(e - 1) + '</span>' + op('=') : '') + chip(e) + '</span>';
   }
-  const eqSay = (e, powers) => tileSay(e - 1, powers) + ' plus ' + tileSay(e - 1, powers) + ' makes ' + tileSay(e, powers);
+  const eqSay = (e, powers) => powers
+    ? '2 to the ' + (e - 1) + ' plus 2 to the ' + (e - 1) + ' equals 2 to the 1 times 2 to the ' + (e - 1) + ', which is 2 to the ' + e
+    : VALUE[e - 1] + ' plus ' + VALUE[e - 1] + ' equals ' + VALUE[e];
 
-  /* ---------- why a slide is good, in a few plain words ---------- */
-  function whyNow(h, powers) {
+  /* ---------- why a slide is good, in plain words that name the tiles (the reasons come from explain() in engine.js) ---------- */
+  function whyText(h, powers, past) {
     switch (h.why) {
       case 'only': return 'is the only slide that moves anything';
-      case 'corner': return 'keeps your biggest tile in its corner';
-      case 'into-corner': return 'moves your biggest tile into a corner';
-      case 'merge': return 'makes ' + tileWords(h.exp, powers);
-      case 'space': return 'opens space';
-      case 'setup': return 'sets up a merge';
+      case 'merge': return 'makes ' + aTile(h.exp, powers);
+      case 'corner': return 'keeps your ' + tileHTML(h.exp, powers) + ' in its corner';
+      case 'into-corner': return 'moves your ' + tileHTML(h.exp, powers) + ' into a corner';
+      case 'merges': return 'makes ' + h.n + ' merges';
+      case 'pair': return h.fresh ? 'puts your new ' + tileHTML(h.exp, powers) + ' beside the other ' + tileHTML(h.exp, powers)
+        : (h.kept ? 'keeps ' : 'puts ') + twoTiles(h.exp, powers) + ' side by side';
+      case 'space': return 'leaves ' + plural(h.n, 'empty square') + (past ? '; yours left ' + fmt(h.m) : '');
       case 'order': return 'keeps your rows in order';
-      default: return 'is safest a few slides ahead';
-    }
-  }
-  function whyThen(h, powers) {
-    switch (h.why) {
-      case 'corner': return 'would have kept your biggest tile in its corner';
-      case 'into-corner': return 'would have moved your biggest tile into a corner';
-      case 'merge': return 'would have made ' + tileWords(h.exp, powers);
-      case 'space': return 'would have opened more space';
-      case 'setup': return 'would have set up a merge';
-      case 'order': return 'would have kept your rows in order';
-      default: return 'was safer a few slides ahead';
+      default: return past ? 'was safer a few slides ahead' : 'is safest a few slides ahead';
     }
   }
 
@@ -1097,17 +1153,48 @@ function lookaheadDaily(seed, slides) {
   const dailySeed = date => Math.floor(Lab.dailyRng(ID, date)() * 4294967296) >>> 0;
   const dailyGame = date => ({ date, seed: dailySeed(date), slides: DAILY_SLIDES });
 
+  /* ---------- what is saved, read back with care: anything damaged counts as absent ---------- */
+  const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
+  const isNum = x => typeof x === 'number' && Number.isFinite(x);
+  const count = x => isNum(x) && x > 0 ? Math.floor(x) : 0;
+  const cleanCosts = (list, slides) => Array.isArray(list) ? list.filter(c => isObj(c) && Number.isInteger(c.i) && c.i > 0 && c.i <= slides &&
+    DIRS.indexOf(c.b) >= 0 && isNum(c.c) && c.c > 0).slice(0, 12).map(c => ({ i: c.i, c: c.c, b: c.b })) : [];
+  const cleanPend = (list, slides) => Array.isArray(list) ? list.filter(i => Number.isInteger(i) && i > 0 && i <= slides).slice(-40) : [];
+  const cleanLook = x => isObj(x) && isNum(x.score) ? { score: x.score, top: count(x.top), slides: count(x.slides) } : null;
+  /* A finished Daily: an object with a string date and moves and a finite seed, under its own date. */
+  const isResult = (x, date) => isObj(x) && typeof x.date === 'string' && typeof x.moves === 'string' && isNum(x.seed) && (!date || x.date === date);
+  function readResult(x, date) {
+    if (!isResult(x, date)) return null;
+    const g = rebuild(x.seed >>> 0, x.moves);
+    return { date: x.date, seed: g.seed, moves: g.moves, score: g.score, top: maxExp(g.board), slides: g.slides, stuck: isOver(g.board),
+      hints: count(x.hints), costs: cleanCosts(x.costs, g.slides), look: cleanLook(x.look) };
+  }
+  /* A game saved part-way (Play, Board, or the Daily in progress), rebuilt from its seed and slides. */
+  function readGame(x) {
+    if (!isObj(x) || typeof x.moves !== 'string' || !isNum(x.seed)) return null;
+    const g = rebuild(x.seed >>> 0, x.moves);
+    return { g, hints: count(x.hints), won: x.won === true, costs: cleanCosts(x.costs, g.slides), pend: cleanPend(x.pend, g.slides), date: x.date, level: x.level };
+  }
+  /* Two tabs on one Daily. Before this tab writes: a finished result stands, so this tab becomes a replay ('replay');
+     a stored run with slides this tab doesn't have is picked up rather than written over ('reload'); else 'write'. */
+  function dailyDecision(result, run, moves) {
+    if (result) return 'replay';
+    if (run && moves.indexOf(run.moves) !== 0) return 'reload';
+    return 'write';
+  }
+  /* Where a Play or Board game is saved: one Classic game, and one per Challenge level. */
+  const saveKey = (mode, kind, level) => ID + '.' + mode + '.' + (kind === 'challenge' ? 'challenge.' + level : 'classic');
+
   /* ---------- one session of a mode ---------- */
   function mount(mode, host, ctx) {
     host.classList.add('t48-host');
-    const saved = Lab.store.get(ID + '.settings', {}) || {};
+    const raw = Lab.store.get(ID + '.settings', null), saved = isObj(raw) ? raw : {};
     const kindOf = k => k === 'challenge' ? 'challenge' : 'classic';
-    const levelOf = l => CHALLENGES[l] ? l : 'easy';
+    const levelOf = l => Object.prototype.hasOwnProperty.call(CHALLENGES, l) ? l : 'easy';
     const S = {
-      kind: kindOf(saved.kind), level: levelOf(saved.level),
-      bKind: kindOf(saved.bKind), bLevel: levelOf(saved.bLevel),
-      powers: !!saved.powers,
-      best: +Lab.store.get(ID + '.best', 0) || 0,
+      kind: kindOf(saved.kind), level: levelOf(saved.level), bKind: kindOf(saved.bKind), bLevel: levelOf(saved.bLevel),
+      powers: saved.powers === true,
+      best: count(Lab.store.get(ID + '.best', 0)),
       game: null, gid: 0, last: null, end: null, won: false,
       hints: 0, hintAt: -1, hint: null,
       analysis: null, costs: [], pending: [],
@@ -1117,21 +1204,18 @@ function lookaheadDaily(seed, slides) {
     const kind = () => mode === 'daily' ? 'daily' : onBoard ? S.bKind : S.kind;
     const level = () => onBoard ? S.bLevel : S.level;
     const challenge = () => kind() === 'challenge' ? CHALLENGES[level()] : null;
-    const saveKey = () => ID + '.' + mode + '.' + kind();
+    const RUN = ID + '.dailyrun', resultKey = date => ID + '.daily.' + date;
     const q = sel => host.querySelector(sel);
-    let endTimer = 0, idleId = 0, dead = false, review = null;
+    let endTimer = 0, idleId = 0, dead = false, review = null, eqKey = '';
 
     host.innerHTML =
       '<div class="t48-game t48-m-' + mode + '">' +
         '<section class="card t48-stage" aria-label="2048">' +
-          '<div class="t48-head"><p class="label t48-meta"></p><div class="t48-stats"></div><div class="t48-bar" hidden><i></i></div></div>' +
-          '<div class="t48-play">' +
-            '<div class="t48-board" role="img" aria-label="Board">' +
-              '<div class="t48-cells" aria-hidden="true">' + '<i></i>'.repeat(16) + '</div>' +
-              '<div class="t48-tiles" aria-hidden="true"></div>' +
-            '</div>' +
-            '<div class="t48-eq" aria-live="polite"></div>' +
-          '</div>' +
+          '<div class="t48-head"><p class="label t48-meta"></p><div class="t48-stats"></div></div>' +
+          '<div class="t48-play"><div class="t48-board" role="img" aria-label="Board">' +
+            '<div class="t48-cells" aria-hidden="true">' + '<i></i>'.repeat(16) + '</div><div class="t48-tiles" aria-hidden="true"></div>' +
+          '</div></div>' +
+          '<div class="t48-eq" aria-live="polite"></div>' +
           '<div class="t48-info" aria-live="polite"></div>' +
           (onBoard ? '<div class="t48-pad" role="group" aria-label="Slide">' + ['up', 'left', 'right', 'down'].map(d =>
             '<button class="t48-pad-btn" type="button" data-dir="' + d + '" aria-label="Slide ' + d + '">' + arrow(d) + '</button>').join('') + '</div>' : '') +
@@ -1140,17 +1224,17 @@ function lookaheadDaily(seed, slides) {
       '</div>';
 
     /* ---------- games ---------- */
+    /* data: what readGame() gave back, or nothing for a new game */
     function begin(g, data) {
       data = data || {};
       clearTimeout(endTimer);
       S.game = g; S.gid++;
-      S.last = null; S.hint = null; S.analysis = null;
-      S.hints = Math.max(0, +data.hints || 0); S.hintAt = -1;
+      S.last = null; S.hint = null; S.analysis = null; eqKey = '';
+      S.hints = data.hints || 0; S.hintAt = -1;
       S.won = !!data.won;
-      S.costs = Array.isArray(data.costs) ? data.costs.filter(c => c && c.i > 0 && c.i <= g.slides && DIRS.indexOf(c.b) >= 0 && c.c > 0) : [];
+      S.costs = data.costs || [];
       /* slides that were waiting to be looked at when the game was saved */
-      S.pending = (Array.isArray(data.pend) ? data.pend : []).filter(i => i > 0 && i <= g.slides).slice(-40)
-        .map(i => ({ gid: S.gid, i, board: rebuild(g.seed, g.moves.slice(0, i - 1)).board, made: CH_DIR[g.moves[i - 1]] }));
+      S.pending = (data.pend || []).map(i => ({ gid: S.gid, i, board: rebuild(g.seed, g.moves.slice(0, i - 1)).board, made: CH_DIR[g.moves[i - 1]] }));
       S.end = whatEnded();
       renderAll(null);
       wake();
@@ -1159,28 +1243,23 @@ function lookaheadDaily(seed, slides) {
       begin(newGame((Math.random() * 4294967296) >>> 0));
       save();
     }
-    /* Picks up the saved game for this mode (and kind), or starts a new one. */
+    /* Picks up the saved game for this mode, kind and level, or starts a new one. */
     function resume() {
-      const data = Lab.store.get(saveKey(), null);
-      const ok = data && typeof data.moves === 'string' && Number.isFinite(data.seed) && (kind() !== 'challenge' || data.level === level());
-      if (ok) {
-        const g = rebuild(data.seed >>> 0, data.moves);
-        begin(g, data);
-        if (!S.end) return;
+      let data = readGame(Lab.store.get(saveKey(mode, kind(), level()), null));
+      if (!data && kind() === 'challenge') { /* saved before each level had its own save */
+        const old = readGame(Lab.store.get(ID + '.' + mode + '.challenge', null));
+        if (old && old.level === level()) data = old;
       }
+      if (data) { begin(data.g, data); if (!S.end) return; }
       freshGame();
     }
     function save() {
       const g = S.game;
-      const data = {
-        seed: g.seed, moves: g.moves, hints: S.hints, won: S.won, level: level(),
-        costs: S.costs, pend: S.pending.filter(p => p.gid === S.gid).map(p => p.i)
-      };
-      if (mode !== 'daily') Lab.store.set(saveKey(), data);
-      else if (!S.daily.replay && !S.end) Lab.store.set(ID + '.dailyrun', Object.assign({ date: S.daily.date }, data));
+      const data = { seed: g.seed, moves: g.moves, hints: S.hints, won: S.won, costs: S.costs, pend: S.pending.filter(p => p.gid === S.gid).map(p => p.i) };
+      if (mode !== 'daily') { Lab.store.set(saveKey(mode, kind(), level()), Object.assign({ level: level() }, data)); return; }
+      if (!S.end && dailyCheck()) Lab.store.set(RUN, Object.assign({ date: S.daily.date }, data, { hints: S.hints }));
     }
     const saveSettings = () => Lab.store.set(ID + '.settings', { kind: S.kind, level: S.level, bKind: S.bKind, bLevel: S.bLevel, powers: S.powers });
-
     function whatEnded() {
       const g = S.game, ch = challenge();
       if (mode === 'daily') return g.slides >= DAILY_SLIDES || isOver(g.board) ? 'done' : null;
@@ -1189,9 +1268,39 @@ function lookaheadDaily(seed, slides) {
       return isOver(g.board) ? 'over' : null;
     }
 
+    /* ---------- two tabs on one Daily: before every write, look at what is stored ---------- */
+    function storedRun() {
+      const x = readGame(Lab.store.get(RUN, null));
+      return x && x.date === S.daily.date && x.g.seed === S.daily.seed ? x : null;
+    }
+    /* True when this tab may write. Otherwise it has become a replay of the finished result, or picked up the slides
+       another tab made. Hints count the larger of the two tabs' counts. */
+    function dailyCheck() {
+      const d = S.daily;
+      if (!d || d.replay) return false;
+      const raw = Lab.store.get(resultKey(d.date), null), run = storedRun();
+      const act = dailyDecision(isResult(raw, d.date) ? raw : null, run && { moves: run.g.moves }, S.game.moves);
+      if (act === 'replay') { becomeReplay(readResult(raw, d.date)); return false; }
+      if (act === 'reload') { const mine = S.hints; begin(run.g, run); S.hints = Math.max(mine, run.hints); renderSide(); return false; }
+      if (run && run.hints > S.hints) { S.hints = run.hints; renderSide(); }
+      return true;
+    }
+    /* Another tab finished today's Daily first: its result stands, and this game goes on as a replay. */
+    function becomeReplay(result) {
+      clearTimeout(endTimer);
+      S.daily.replay = true;
+      S.result = null;
+      renderSide();
+      showResults(result, false, false);
+    }
+    function onStorage() {
+      if (!dead && mode === 'daily' && S.daily && !S.daily.replay && !S.result) dailyCheck();
+    }
+
     /* ---------- sliding ---------- */
     function doSlide(dir) {
       if (!S.game || S.end || Lab.sheetOpen()) return;
+      if (mode === 'daily' && !S.daily.replay && !dailyCheck()) return; /* another tab moved on: catch up first */
       const g = S.game, before = g.board, i = g.slides + 1;
       const a = current(S.analysis) ? S.analysis : null;
       const r = makeSlide(g, dir);
@@ -1208,9 +1317,10 @@ function lookaheadDaily(seed, slides) {
       else if (r.merges.length) Lab.sound.play('step');
       save();
       renderTiles(r); renderEq(); renderSide();
-      if (S.end && mode === 'daily') recordDaily();
-      if (S.end) endTimer = setTimeout(mode === 'daily' ? finishDaily : openEnd, MOVE_MS + 340);
-      else if (cheer) endTimer = setTimeout(celebrate, MOVE_MS + 340);
+      if (S.end) {
+        if (mode !== 'daily') endTimer = setTimeout(openEnd, MOVE_MS + 340);
+        else if (recordDaily()) endTimer = setTimeout(finishDaily, MOVE_MS + 340);
+      } else if (cheer) endTimer = setTimeout(celebrate, MOVE_MS + 340);
       wake();
     }
     function nudge(dir) {
@@ -1239,9 +1349,12 @@ function lookaheadDaily(seed, slides) {
     const canHint = () => !!S.game && !S.end && !isOver(S.game.board);
     function hintNow() {
       if (!canHint() || Lab.sheetOpen()) return;
+      if (mode === 'daily' && !S.daily.replay && !dailyCheck()) return;
       const a = analysisNow();
       if (!a.best) return;
-      S.hint = Object.assign({ at: S.game.slides, dir: a.best }, reason(S.game.board, a.best));
+      /* why it beats the next-best slide */
+      const next = DIRS.filter(d => d !== a.best && a.values[d] !== null).sort((x, y) => a.values[y] - a.values[x])[0];
+      S.hint = Object.assign({ at: S.game.slides, dir: a.best }, explain(S.game.board, a.best, next, true));
       if (S.hintAt !== S.game.slides) { S.hintAt = S.game.slides; S.hints++; save(); }
       renderSide();
     }
@@ -1263,7 +1376,8 @@ function lookaheadDaily(seed, slides) {
       if (dead) return;
       const until = performance.now() + (deadline && !deadline.didTimeout ? Math.max(4, Math.min(12, deadline.timeRemaining())) : 8);
       let more = true;
-      do more = step(); while (more && performance.now() < until);
+      try { do more = step(); while (more && performance.now() < until); }
+      catch (err) { console.error(err); S.pending = []; more = false; } /* never let one bad step stop the game */
       if (more) wake();
     }
     function step() {
@@ -1280,9 +1394,10 @@ function lookaheadDaily(seed, slides) {
     }
     function costsReady() {
       if (S.game && !S.end) save();
-      if (S.result) {
+      if (S.result && !S.daily.replay) {
         S.result.costs = S.costs.slice();
-        if (!S.daily.replay) Lab.store.set(ID + '.daily.' + S.result.date, S.result);
+        const key = resultKey(S.result.date), stored = Lab.store.get(key, null);
+        if (isResult(stored, S.result.date) && stored.moves === S.result.moves) Lab.store.set(key, S.result); /* only ever this tab's own result */
       }
       if (review && review.live) fillCosts();
     }
@@ -1316,17 +1431,20 @@ function lookaheadDaily(seed, slides) {
         void layer.offsetWidth; /* start from the old cells so the tiles glide */
         moving.forEach(([t, to]) => { t.style.setProperty('--t48-x', to % 4); t.style.setProperty('--t48-y', to >> 2); });
       }
-      const top = maxExp(board);
-      q('.t48-board').setAttribute('aria-label', 'Board: biggest tile ' + tileSay(top, S.powers) + ', ' + emptyCount(board) + ' empty squares');
+      q('.t48-board').setAttribute('aria-label', 'Board: biggest tile ' + tileSay(maxExp(board), S.powers) + ', ' + plural(emptyCount(board), 'empty square'));
     }
+    /* The latest merge stays up, dimmed after a slide that merged nothing, until the next one. */
     function renderEq() {
-      const el = q('.t48-eq');
-      if (!S.game.slides) {
-        el.innerHTML = '<span class="t48-tip"><span class="t48-tip-touch">Swipe to slide the tiles</span><span class="t48-tip-keys">Use the arrow keys or swipe</span></span>';
+      const el = q('.t48-eq'), g = S.game, e = g.lastMerge || 0;
+      const key = e ? [S.gid, e, g.mergeAt, S.powers].join('|') : g.slides ? 'none' : 'tip';
+      el.classList.toggle('t48-dim', !!e && g.mergeAt !== g.slides);
+      if (key === eqKey) return;
+      eqKey = key;
+      if (!e) {
+        el.innerHTML = g.slides ? '' : '<span class="t48-tip"><span class="t48-tip-touch">Swipe to slide the tiles</span><span class="t48-tip-keys">Use the arrow keys or swipe</span></span>';
         return;
       }
-      const e = S.last ? biggestMerge(S.last.merges) : 0;
-      el.innerHTML = e ? '<span class="t48-sum" role="img" aria-label="' + eqSay(e, S.powers) + '">' + eqHTML(e, S.powers) + '</span>' : '';
+      el.innerHTML = '<span class="t48-sum" role="img" aria-label="' + eqSay(e, S.powers) + '">' + eqHTML(e, S.powers) + '</span>';
     }
     function endTitle() {
       if (S.end === 'won') return 'You made ' + tileHTML(challenge().goal, S.powers) + '!';
@@ -1341,27 +1459,27 @@ function lookaheadDaily(seed, slides) {
       if (S.hints) bits.push('With hints');
       q('.t48-meta').textContent = bits.join(' · ');
 
-      const stats = [];
-      if (mode === 'daily') stats.push(['Slides left', String(DAILY_SLIDES - g.slides)], ['Score', fmt(g.score)]);
-      else if (ch) stats.push(['Goal', tileHTML(ch.goal, S.powers)], ['Slides left', String(Math.max(0, ch.limit - g.slides))], ['Score', fmt(g.score)]);
-      else if (onBoard) stats.push(['Score', fmt(g.score)], ['Slides', String(g.slides)]);
-      else stats.push(['Score', fmt(g.score)], ['Best', fmt(Math.max(S.best, g.score))]);
-      q('.t48-stats').innerHTML = stats.map(([l, v]) => '<div class="t48-stat"><span class="label">' + l + '</span><b>' + v + '</b></div>').join('');
-      const total = mode === 'daily' ? DAILY_SLIDES : ch ? ch.limit : 0, bar = q('.t48-bar');
-      bar.hidden = !total;
-      if (total) bar.firstChild.style.transform = 'scaleX(' + Math.max(0, 1 - g.slides / total) + ')';
+      /* "Slides left" carries its own bar, in a neutral colour, so it never reads as progress toward the goal */
+      const stat = (label, value, left) => '<div class="t48-stat' + (left === undefined ? '' : ' t48-left') + '"><span class="label">' + label + '</span><b>' + value + '</b>' +
+        (left === undefined ? '' : '<i class="t48-lbar"><i style="transform: scaleX(' + Math.max(0, Math.min(1, left)) + ')"></i></i>') + '</div>';
+      let stats;
+      if (mode === 'daily') stats = stat('Slides left', fmt(DAILY_SLIDES - g.slides), (DAILY_SLIDES - g.slides) / DAILY_SLIDES) + stat('Score', fmt(g.score));
+      else if (ch) stats = stat('Goal', tileHTML(ch.goal, S.powers)) + stat('Slides left', fmt(Math.max(0, ch.limit - g.slides)), (ch.limit - g.slides) / ch.limit) + stat('Score', fmt(g.score));
+      else if (onBoard) stats = stat('Score', fmt(g.score)) + stat('Slides', fmt(g.slides));
+      else stats = stat('Score', fmt(g.score)) + stat('Best', fmt(Math.max(S.best, g.score)));
+      q('.t48-stats').innerHTML = stats;
 
       const hint = S.hint && S.hint.at === g.slides ? S.hint : null;
       let info = '';
       if (S.end) info = '<p class="t48-end">' + endTitle() + '</p>';
-      else if (hint) info = '<div class="t48-hint"><span class="label">Hint</span><p>' + arrow(hint.dir) + '<span><b>' + DIR_WORD[hint.dir] + '</b> ' + whyNow(hint, S.powers) + '.</span></p></div>';
+      else if (hint) info = '<div class="t48-hint"><span class="label">Hint</span><p>' + arrow(hint.dir) + '<span><b>' + DIR_WORD[hint.dir] + '</b> ' + whyText(hint, S.powers) + '.</span></p></div>';
       q('.t48-info').innerHTML = info;
 
       const btn = (act, label, cls, off) => '<button class="btn' + (cls ? ' ' + cls : '') + '" type="button" data-act="' + act + '"' + (off ? ' disabled' : '') + '>' + label + '</button>';
-      let acts = '';
-      if (mode === 'daily') acts = S.end ? btn('results', 'See results', 'primary t48-main') : btn('hint', 'Hint', '', !canHint());
-      else if (S.end) acts = btn('review', 'Review') + btn('new', 'New game', 'primary t48-main');
-      else acts = btn('hint', 'Hint', '', !canHint()) + btn('new', 'New game', 't48-main');
+      let acts;
+      if (mode === 'daily') acts = S.end ? btn('results', 'See results', 'primary') : btn('hint', 'Hint', '', !canHint());
+      else if (S.end) acts = btn('review', 'Review') + btn('new', 'New game', 'primary');
+      else acts = btn('hint', 'Hint', '', !canHint()) + btn('new', 'New game');
       q('.t48-actions').innerHTML = acts;
 
       host.querySelectorAll('.t48-pad-btn').forEach(b => {
@@ -1372,19 +1490,23 @@ function lookaheadDaily(seed, slides) {
     function renderAll(r) { renderTiles(r); renderEq(); renderSide(); }
 
     /* ---------- the end of a game: what happened, and the slides that cost the most ---------- */
+    /* One costly slide: the board after it beside the board after the better slide, the key tiles outlined and named. */
+    function costHTML(rec, c) {
+      const before = rebuild(rec.seed, rec.moves.slice(0, c.i - 1)).board, made = CH_DIR[rec.moves[c.i - 1]];
+      const ended = rec.stuck && c.i === rec.moves.length;
+      const h = explain(before, c.b, made);
+      const mine = ended ? rebuild(rec.seed, rec.moves).board : slide(before, made).board, better = slide(before, c.b).board;
+      const why = ended ? 'This slide ended the game.' : '<b>' + DIR_WORD[c.b] + '</b> ' + whyText(h, S.powers, true) + '.';
+      return '<div class="t48-cost"><p class="label">Slide ' + fmt(c.i) + '</p><div class="t48-pair">' +
+        '<figure>' + miniHTML(mine, S.powers, 'After your slide ' + made, ended ? [] : h.mark.b) + '<figcaption>You: ' + arrow(made) + '<b>' + DIR_WORD[made] + '</b></figcaption></figure>' +
+        '<figure>' + miniHTML(better, S.powers, 'After a slide ' + c.b, ended ? [] : h.mark.a) + '<figcaption>Better: ' + arrow(c.b) + '<b>' + DIR_WORD[c.b] + '</b></figcaption></figure>' +
+        '</div><p class="t48-why">' + why + '</p></div>';
+    }
     function costsHTML(rec) {
       if (rec.waiting) return '<p class="t48-wait">Looking back over your slides…</p>';
       const list = picks(rec.costs);
       if (!list.length) return '<p class="t48-none">None. Every slide was close to what the look-ahead player would do.</p>';
-      /* each: the board before the slide, the slide made, and the slide the look-ahead player preferred */
-      return list.map(c => {
-        const before = rebuild(rec.seed, rec.moves.slice(0, c.i - 1)).board, made = CH_DIR[rec.moves[c.i - 1]];
-        return '<div class="t48-cost">' + miniHTML(before, S.powers, 'The board before slide ' + c.i) + '<div class="t48-cost-text">' +
-          '<p class="label">Slide ' + c.i + '</p>' +
-          '<p class="t48-move">You: ' + arrow(made) + '<b>' + DIR_WORD[made] + '</b></p>' +
-          '<p class="t48-move">Better: ' + arrow(c.b) + '<b>' + DIR_WORD[c.b] + '</b></p>' +
-          '<p class="t48-why">It ' + whyThen(reason(before, c.b, made), S.powers) + '.</p></div></div>';
-      }).join('');
+      return list.map(c => costHTML(rec, c)).join('');
     }
     function fillCosts() {
       if (!review || !review.el.isConnected) return;
@@ -1392,21 +1514,23 @@ function lookaheadDaily(seed, slides) {
       review.rec.costs = review.live ? S.costs : review.rec.costs;
       review.el.querySelector('.t48-costs').innerHTML = costsHTML(review.rec);
     }
-    /* rec: { title, bits, seed, moves, score, top, costs, waiting }; live: this session's game, still being looked at */
+    const rstat = (value, label) => '<div class="r-stat"><b>' + value + '</b><span>' + label + '</span></div>';
+    /* rec: { title, bits, seed, moves, score, top, stuck, costs, waiting }; live: this session's game, still being looked at.
+       On the Board it is big enough to read across a classroom. */
     function openReview(rec, live, opts) {
       const h = '<h2>' + rec.title + '</h2><p class="label">' + rec.bits.join(' · ') + '</p>' +
-        '<div class="r-stats t48-rstats"><div class="r-stat"><b>' + fmt(rec.score) + '</b><span>Score</span></div>' +
-        '<div class="r-stat"><b>' + tileHTML(rec.top, S.powers) + '</b><span>Biggest tile</span></div></div>' +
+        '<div class="r-stats t48-rstats">' + rstat(fmt(rec.score), 'Score') + rstat(tileHTML(rec.top, S.powers), 'Biggest tile') + '</div>' +
         '<p class="label t48-costs-label">Slides that cost the most</p><div class="t48-costs">' + costsHTML(rec) + '</div>';
-      const sh = Lab.sheet(h, Object.assign({ cls: 't48-sheet t48-review', label: 'Review' }, opts));
+      const sh = Lab.sheet(h, Object.assign({ cls: 't48-sheet t48-review' + (onBoard ? ' t48-big' : ''), label: 'Review' }, opts));
       review = { el: sh.el, rec, live };
       return sh;
     }
     function liveRecord() {
       const g = S.game, ch = challenge();
-      const bits = [mode === 'daily' ? 'Daily' : ch ? 'Challenge · ' + ch.name : 'Classic', ch && S.end === 'won' ? g.slides + ' of ' + ch.limit + ' slides' : g.slides + (g.slides === 1 ? ' slide' : ' slides')];
+      const bits = [mode === 'daily' ? 'Daily' : ch ? 'Challenge · ' + ch.name : 'Classic',
+        ch && S.end === 'won' ? fmt(g.slides) + ' of ' + fmt(ch.limit) + ' slides' : plural(g.slides, 'slide')];
       if (S.hints) bits.push('With hints');
-      return { title: endTitle(), bits, seed: g.seed, moves: g.moves, score: g.score, top: maxExp(g.board), costs: S.costs, waiting: S.pending.length > 0 };
+      return { title: endTitle(), bits, seed: g.seed, moves: g.moves, score: g.score, top: maxExp(g.board), stuck: isOver(g.board), costs: S.costs, waiting: S.pending.length > 0 };
     }
     /* After a game in Play or Board: Close keeps the final board on screen; New game starts over. */
     function openEnd() {
@@ -1423,8 +1547,8 @@ function lookaheadDaily(seed, slides) {
     function celebrate() {
       if (S.end || Lab.sheetOpen()) return;
       /* Keep going is the button that has focus, so Enter never ends the game by accident */
-      const sh = Lab.sheet('<h2>You made ' + tileHTML(GOAL, S.powers) + '!</h2><div class="r-stats t48-rstats"><div class="r-stat"><b>' + fmt(S.game.score) + '</b><span>Score</span></div>' +
-        '<div class="r-stat"><b>' + S.game.slides + '</b><span>Slides</span></div></div>', {
+      const sh = Lab.sheet('<h2>You made ' + tileHTML(GOAL, S.powers) + '!</h2>' + (S.hints ? '<p class="label">With hints</p>' : '') +
+        '<div class="r-stats t48-rstats">' + rstat(fmt(S.game.score), 'Score') + rstat(fmt(S.game.slides), 'Slides') + '</div>', {
         cls: 't48-sheet t48-cheer', label: 'You made 2048', done: 'Keep going',
         extra: '<button class="btn" type="button" data-new>New game</button>'
       });
@@ -1444,63 +1568,90 @@ function lookaheadDaily(seed, slides) {
     }
 
     /* ---------- Daily ---------- */
-    function startDaily(replay) {
+    function startDaily(replay, clean) {
       const date = ctx.date, seed = dailySeed(date);
       S.daily = { date, seed, replay: !!replay };
       S.result = null;
-      let data = replay ? null : Lab.store.get(ID + '.dailyrun', null);
-      if (!(data && data.date === date && data.seed === seed && typeof data.moves === 'string')) data = null;
-      begin(data ? rebuild(seed, data.moves) : newGame(seed), data);
+      const run = replay || clean ? null : storedRun();
+      begin(run ? run.g : newGame(seed), run);
       if (!S.look && !S.lookRun) S.lookRun = lookaheadRun(seed, DAILY_SLIDES);
       wake();
-      if (S.end) endTimer = setTimeout(finishDaily, 0);
+      if (S.end && !replay && recordDaily()) endTimer = setTimeout(finishDaily, 0);
     }
     function lookDone() {
       S.look = S.lookRun.result();
-      const stored = Lab.store.get(ID + '.daily.' + S.daily.date, null);
-      if (stored && !stored.look) { stored.look = S.look; Lab.store.set(ID + '.daily.' + S.daily.date, stored); }
+      const key = resultKey(S.daily.date), stored = Lab.store.get(key, null);
+      /* the same tiles give every tab the same score, so it may join any finished result for today */
+      if (isResult(stored, S.daily.date) && !cleanLook(stored.look)) { stored.look = S.look; Lab.store.set(key, stored); }
       if (S.result && !S.result.look) S.result.look = S.look;
-      const cell = document.querySelector('.t48-results .t48-look b');
-      if (cell) cell.textContent = fmt(S.look.score);
+      const vs = document.querySelector('.t48-results .t48-vs');
+      if (vs) showVs(vs, S.look);
     }
+    /* Records the finished Daily, unless another tab finished first: the first result stands, and this tab becomes a
+       replay showing it (null comes back). A replay is never recorded. */
     function recordDaily() {
       if (S.result) return S.result;
       const g = S.game, d = S.daily;
-      S.result = { date: d.date, seed: d.seed, moves: g.moves, score: g.score, top: maxExp(g.board), slides: g.slides, hints: S.hints, costs: S.costs.slice(), look: S.look };
-      if (!d.replay) { Lab.store.set(ID + '.daily.' + d.date, S.result); Lab.store.set(ID + '.dailyrun', null); }
-      return S.result;
+      const res = { date: d.date, seed: d.seed, moves: g.moves, score: g.score, top: maxExp(g.board), slides: g.slides, stuck: isOver(g.board),
+        hints: S.hints, costs: S.costs.slice(), look: S.look };
+      if (!d.replay) {
+        const raw = Lab.store.get(resultKey(d.date), null);
+        if (isResult(raw, d.date)) { becomeReplay(readResult(raw, d.date)); return null; }
+        const run = storedRun();
+        if (run && run.hints > res.hints) res.hints = S.hints = run.hints;
+        Lab.store.set(resultKey(d.date), res);
+        Lab.store.set(RUN, null);
+      }
+      S.result = res;
+      return res;
     }
     function finishDaily() {
-      if (S.end) showResults(recordDaily(), S.daily.replay);
+      if (!S.end) return;
+      const res = recordDaily();
+      if (res) showResults(res, S.daily.replay, true);
     }
-    function showResults(res, replay) {
-      const seed = Number.isFinite(res.seed) ? res.seed >>> 0 : dailySeed(res.date);
-      const g = rebuild(seed, res.moves), look = res.look || S.look;
-      const sub = 'Daily · ' + Lab.dateWords(res.date) + (g.slides < DAILY_SLIDES ? ' · ' + g.slides + ' slides' : '') +
-        (res.hints ? ' · with hints' : '') + (replay ? ' · replay' : '');
+    /* "Look-ahead player: 2,004", and a cheer when the student beats it */
+    function showVs(el, look) {
+      const score = +el.dataset.score;
+      if (!look) { el.innerHTML = 'Look-ahead player: <b>…</b>'; return; }
+      const beat = score > look.score;
+      el.classList.toggle('t48-beat', beat);
+      el.innerHTML = 'Look-ahead player: <b>' + fmt(look.score) + '</b>' +
+        (beat ? '<span class="t48-won">You beat it!</span>' : score === look.score ? '<span class="t48-won">You tied it!</span>' : '');
+      if (beat && el.dataset.live === '1' && !el.dataset.cheered) { el.dataset.cheered = '1'; Lab.sound.play('solve'); }
+    }
+    function showResults(res, replay, live) {
+      const g = rebuild(res.seed, res.moves), top = maxExp(g.board);
+      const sub = 'Daily · ' + Lab.dateWords(res.date) + (g.slides < DAILY_SLIDES ? ' · ' + plural(g.slides, 'slide') : '') + (res.hints ? ' · with hints' : '');
       const sh = Lab.results({
-        game: '2048', sub,
+        game: '2048', sub, replay: !!replay, streak: true,
         body: miniHTML(g.board, S.powers, 'Final board'),
-        stats: [[fmt(g.score), 'Score'], [fmt(VALUE[maxExp(g.board)]), 'Biggest tile'], [look ? fmt(look.score) : '…', 'Look-ahead player']]
+        stats: [[fmt(g.score), 'Score'], [String(VALUE[top]), 'Biggest tile']]
       }, {
-        cls: 'results t48-sheet t48-results', done: 'Done', onClose: ctx.home,
+        cls: 'results t48-sheet t48-results' + (replay ? ' replay' : ''), done: 'Done', onClose: ctx.home,
         extra: '<button class="btn" type="button" data-review>Review</button><button class="btn" type="button" data-again>Play again</button>'
       });
-      const stats = sh.el.querySelectorAll('.r-stat');
-      if (S.powers && stats[1]) stats[1].firstChild.innerHTML = tileHTML(maxExp(g.board), true);
-      if (stats[2]) stats[2].classList.add('t48-look');
+      if (S.powers) sh.el.querySelectorAll('.r-stat b')[1].innerHTML = tileHTML(top, true);
+      const vs = document.createElement('p');
+      vs.className = 't48-vs';
+      vs.dataset.score = g.score;
+      vs.dataset.live = live ? '1' : '0';
+      sh.el.querySelector('.r-stats').after(vs);
+      showVs(vs, res.look || S.look);
       sh.el.querySelector('[data-again]').addEventListener('click', () => { sh.close(true); startDaily(true); });
       sh.el.querySelector('[data-review]').addEventListener('click', () => {
         sh.close(true);
-        const live = S.result === res;
-        const bits = ['Daily', g.slides + ' slides'].concat(res.hints ? ['With hints'] : []);
-        openReview({ title: g.slides >= DAILY_SLIDES ? DAILY_SLIDES + ' slides done' : 'Game over', bits, seed, moves: res.moves, score: g.score, top: maxExp(g.board),
-          costs: live ? S.costs : (Array.isArray(res.costs) ? res.costs : []), waiting: live && S.pending.length > 0 }, live,
-        { done: 'Back', onClose() { review = null; showResults(res, replay); } });
+        const mine = S.result === res;
+        openReview({
+          title: g.slides >= DAILY_SLIDES ? DAILY_SLIDES + ' slides done' : 'Game over',
+          bits: ['Daily', plural(g.slides, 'slide')].concat(res.hints ? ['With hints'] : []),
+          seed: res.seed, moves: g.moves, score: g.score, top, stuck: isOver(g.board),
+          costs: mine ? S.costs : res.costs || [], waiting: mine && S.pending.length > 0
+        }, mine, { done: 'Back', onClose() { review = null; showResults(res, replay, false); } });
       });
     }
 
-    /* ---------- setup: the game (Play and Board) and the tiles (every mode) ---------- */
+    /* ---------- setup: the game (Play and Board) and the tiles (every mode). Only Done applies it. ---------- */
     function openSetup() {
       const daily = mode === 'daily';
       const chosen = { kind: daily ? null : kind(), level: level(), powers: S.powers };
@@ -1515,13 +1666,15 @@ function lookaheadDaily(seed, slides) {
       h += '<p class="label">Tiles</p><div class="chips" role="group" aria-label="Tiles">' +
         chip('powers', '0', 'Numbers <span class="t48-chipx">32</span>', !chosen.powers) +
         chip('powers', '1', 'Powers <span class="t48-chipx">' + sup(5) + '</span>', chosen.powers) + '</div>';
-      const sh = Lab.sheet(h, { cls: 't48-sheet t48-setup', label: 'Setup', onClose: apply });
+      let done = false; /* Escape and a tap outside cancel */
+      const sh = Lab.sheet(h, { cls: 't48-sheet t48-setup', label: 'Setup', onClose() { if (done) apply(); } });
       const goalLine = () => {
         const p = sh.el.querySelector('.t48-goal');
-        if (p) { const c = CHALLENGES[chosen.level]; p.innerHTML = 'Make ' + tileHTML(c.goal, chosen.powers) + ' within ' + c.limit + ' slides.'; }
+        if (p) { const c = CHALLENGES[chosen.level]; p.innerHTML = 'Make ' + tileHTML(c.goal, chosen.powers) + ' within ' + fmt(c.limit) + ' slides.'; }
       };
       goalLine();
       sh.el.addEventListener('click', e => {
+        if (e.target.closest('.sheet-foot [data-close]')) { done = true; return; }
         const c = e.target.closest('.chip');
         if (!c) return;
         const g = c.dataset.group;
@@ -1533,8 +1686,9 @@ function lookaheadDaily(seed, slides) {
       });
       function apply() {
         const tiles = chosen.powers !== S.powers;
-        S.powers = chosen.powers;
         const switched = !daily && (chosen.kind !== kind() || (chosen.kind === 'challenge' && chosen.level !== level()));
+        if (switched) save(); /* the game being left stays saved under its own kind and level */
+        S.powers = chosen.powers;
         if (!daily) {
           if (onBoard) { S.bKind = chosen.kind; S.bLevel = chosen.level; } else { S.kind = chosen.kind; S.level = chosen.level; }
         }
@@ -1567,8 +1721,8 @@ function lookaheadDaily(seed, slides) {
       else return;
       e.preventDefault();
     }
-    document.addEventListener('keydown', onKey);
-    /* Swipes: on the board (and the line under it), touch or mouse. touch-action: none keeps the page still. */
+    /* Swipes on the board, by touch or mouse: one finger at a time. A second touch is ignored until the first lifts,
+       so two fingers make one slide. touch-action: none (game.css) keeps the page still. */
     const play = q('.t48-play');
     let sw = null;
     function swipeDir(e, min) {
@@ -1578,6 +1732,7 @@ function lookaheadDaily(seed, slides) {
     }
     const swipeMin = () => Math.max(14, q('.t48-board').clientWidth * 0.05);
     play.addEventListener('pointerdown', e => {
+      if (sw) return;
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       sw = { id: e.pointerId, x: e.clientX, y: e.clientY, used: false };
       try { play.setPointerCapture(e.pointerId); } catch (err) { /* fine without it */ }
@@ -1587,28 +1742,49 @@ function lookaheadDaily(seed, slides) {
       const dir = swipeDir(e, swipeMin());
       if (dir) { sw.used = true; doSlide(dir); }
     });
-    play.addEventListener('pointerup', e => {
+    function lift(e) { /* only the tracked finger's own lift or cancel ends a swipe */
       if (!sw || sw.id !== e.pointerId) return;
-      if (!sw.used) { const dir = swipeDir(e, swipeMin() * 0.6); if (dir) doSlide(dir); }
+      if (e.type === 'pointerup' && !sw.used) { const dir = swipeDir(e, swipeMin() * 0.6); if (dir) doSlide(dir); }
       sw = null;
-    });
-    play.addEventListener('pointercancel', () => { sw = null; });
+    }
+    window.addEventListener('pointerup', lift);
+    window.addEventListener('pointercancel', lift);
+    /* for browsers without touch-action: a swipe on the board never scrolls the page */
+    play.addEventListener('touchmove', e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
 
     ctx.setDock([{ label: 'Setup', onClick: openSetup }]);
 
-    /* ---------- go ---------- */
-    if (mode === 'daily') {
-      const done = Lab.store.get(ID + '.daily.' + ctx.date, null);
-      if (done && done.look) S.look = done.look;
-      startDaily(!!done);
-      if (done && typeof done.moves === 'string') showResults(done, false);
-    } else resume();
+    /* ---------- go: a damaged save is read as absent, and nothing here may stop the game from opening ---------- */
+    function start() {
+      if (mode === 'daily') {
+        const done = readResult(Lab.store.get(resultKey(ctx.date), null), ctx.date);
+        if (done && done.look) S.look = done.look;
+        startDaily(!!done);
+        if (done) showResults(done, false, false);
+      } else resume();
+    }
+    try { start(); }
+    catch (err) {
+      console.error(err);
+      Lab.closeSheet();
+      try { if (mode === 'daily') startDaily(false, true); else freshGame(); } catch (err2) { console.error(err2); }
+    }
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('storage', onStorage);
 
     return {
-      unmount() { dead = true; document.removeEventListener('keydown', onKey); clearTimeout(endTimer); if (idleId) cic(idleId); },
+      unmount() {
+        dead = true;
+        document.removeEventListener('keydown', onKey);
+        window.removeEventListener('storage', onStorage);
+        window.removeEventListener('pointerup', lift);
+        window.removeEventListener('pointercancel', lift);
+        clearTimeout(endTimer);
+        if (idleId) cic(idleId);
+      },
       state: S, /* for the tests */
       bot: () => lookMove(S.game.board), /* for the browser check: the look-ahead player's slide */
-      redraw: () => renderAll(null) /* for the browser check: draws S.game.board as it stands */
+      redraw: () => { eqKey = ''; renderAll(null); } /* for the browser check: draws S.game.board as it stands */
     };
   }
 
@@ -1628,11 +1804,13 @@ function lookaheadDaily(seed, slides) {
     howTo: '<h2>How to play</h2><p>Swipe, or use the arrow keys, to slide all the tiles. Two tiles with the same number merge into one worth double.</p>' +
       '<div class="t48-howto-ex"><span class="t48-howto-step">Slide left twice:</span>' + exRow([1, 1, 2, 0]) + THEN + exRow([2, 2, 0, 0]) + THEN + exRow([3, 0, 0, 0]) + '</div>' +
       '<p>A tile merges once per slide, so the new 4 waits for the next slide. Make a <b>2048</b> tile before the board fills up.</p>' +
-      '<p><b>Powers</b> shows 32 as ' + sup(5) + ', so 32 + 32 = 64 reads ' + sup(5) + ' + ' + sup(5) + ' = ' + sup(6) + '.</p>' +
+      '<p><b>Powers</b> shows 32 as ' + sup(5) + '. Two ' + sup(5) + ' tiles are 2 · ' + sup(5) + ', which is ' + sup(1) + ' · ' + sup(5) +
+        '. To multiply powers with the same base, add the exponents: ' + sup(1) + ' · ' + sup(5) + ' = ' + sup('1+5') + ' = ' + sup(6) + '.</p>' +
       '<p><b>Hint</b> shows the slide the look-ahead player would make. <b>Challenge</b> gives you a slide limit. <b>Daily</b> is 150 slides, the same tiles for everyone today.</p>' +
       '<p class="t48-keys">Keys: arrows or <b>W A S D</b> slide · <b>H</b> hint · <b>N</b> new game</p>',
-    dailyDone: date => !!Lab.store.get(ID + '.daily.' + date, null),
+    dailyDone: date => isResult(Lab.store.get(ID + '.daily.' + date, null), date),
     daily: dailyGame,
+    saved: { result: readResult, game: readGame, isResult, decide: dailyDecision, key: saveKey }, /* for the tests */
     mount
   });
 })();

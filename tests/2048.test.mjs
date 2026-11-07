@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadEngine, loadLab, dates } from './harness.mjs';
 
-const NAMES = ['slide', 'legalDirs', 'isOver', 'maxExp', 'newGame', 'makeSlide', 'rebuild', 'tileFor', 'analyze', 'lookMove', 'suggest',
+const NAMES = ['slide', 'legalDirs', 'isOver', 'maxExp', 'newGame', 'makeSlide', 'rebuild', 'tileFor', 'analyze', 'lookMove', 'suggest', 'explain',
   'lookaheadDaily', 'lookaheadRun', 'buildTables', 'moveRows', 'toRows', 'SCRATCH', 'VALUE', 'DIRS', 'CHALLENGES', 'CHALLENGE_ORDER',
   'DAILY_SLIDES', 'LOOK_DEPTH', 'CAREFUL_DEPTH'];
 const engine = () => loadEngine('2048', ['engine.js'], NAMES);
@@ -237,4 +237,74 @@ test('a hint answers in well under 150 ms', t => {
   const onlyUp = [0, 0, 0, 0, 1, 2, 1, 2, 2, 1, 2, 1, 1, 2, 1, 2];
   assert.deepEqual(Array.from(D.legalDirs(onlyUp)), ['up']);
   assert.deepEqual([D.suggest(onlyUp).dir, D.suggest(onlyUp).why], ['up', 'only'], 'the only slide that moves, and it says so');
+});
+
+test('a damaged saved Daily counts as absent, and a usable one is cleaned before it is shown', () => {
+  const { Lab, game } = loadLab({ games: ['2048'] });
+  const D = game('2048'), T = '2026-11-07', seed = D.daily(T).seed;
+  const read = x => D.saved.result(x === undefined ? x : JSON.parse(JSON.stringify(x)), T);
+  const bad = [{ moves: 'lrud' }, true, 5, 'x', [1, 2], null, { date: T, moves: 'lrud' }, { date: T, seed: 'x', moves: 'lrud' },
+    { date: T, seed: 1e999, moves: 'lrud' }, { date: T, seed, moves: 4 }, { date: '2026-11-06', seed, moves: 'lrud' }];
+  for (const x of bad) {
+    assert.equal(read(x), null, JSON.stringify(x));
+    Lab.store.set('2048.daily.' + T, x);
+    assert.equal(D.dailyDone(T), false, `dailyDone with ${JSON.stringify(x)}`);
+  }
+  const r = read({ date: T, seed, moves: 'lrudq', look: 5, hints: 'lots',
+    costs: [{ i: 2, c: 30000, b: 'sideways' }, { i: 1, c: 40000, b: 'up' }, { i: 99, c: 5e4, b: 'up' }, { i: 1, c: 'big', b: 'up' }, null] });
+  const g = E.rebuild(seed, 'lrud');
+  assert.deepEqual([r.moves, r.score, r.slides], [g.moves, g.score, g.slides], 'the result is rebuilt from its slides, stopping at the first one that cannot be made');
+  assert.equal(r.look, null, 'a look-ahead score that is not a finite number is worked out again');
+  assert.deepEqual(JSON.parse(JSON.stringify(r.costs)), g.slides >= 1 ? [{ i: 1, c: 40000, b: 'up' }] : [], 'only costs with a real slide, a direction and a size are kept');
+  assert.equal(r.hints, 0);
+  assert.equal(read({ date: T, seed, moves: 'lrud', look: { score: 2004, top: 8 } }).look.score, 2004);
+  Lab.store.set('2048.daily.' + T, { date: T, seed, moves: 'lrud' });
+  assert.equal(D.dailyDone(T), true);
+  for (const x of ['garbage', { seed: '5', moves: 'lr' }, { seed: 5 }, [1, 2], null, true]) assert.equal(D.saved.game(x), null, JSON.stringify(x));
+  const s = D.saved.game({ seed: 5, moves: 'lrudxyz', pend: [1.5, '2', 99, null, 1], costs: [null, 5, { i: 1, c: '9e9', b: 'up' }], hints: 'lots', won: 'yes' });
+  assert.deepEqual([Array.from(s.pend), s.costs.length, s.hints, s.won], [s.g.slides >= 1 ? [1] : [], 0, 0, false]);
+});
+
+test('two tabs on one Daily: no slide undone, no hint dropped, and the first finished result stands', () => {
+  const decide = G.saved.decide;
+  assert.equal(decide(null, null, ''), 'write', 'nothing stored yet');
+  assert.equal(decide(null, { moves: 'lru' }, 'lru'), 'write');
+  assert.equal(decide(null, { moves: 'lr' }, 'lru'), 'write', 'this tab is one slide past what is stored');
+  assert.equal(decide(null, { moves: 'lrud' }, 'lru'), 'reload', 'another tab played on: this tab picks up its slides');
+  assert.equal(decide(null, { moves: 'lrl' }, 'lru'), 'reload', 'another tab went another way first: its slide stands');
+  assert.equal(decide(null, { moves: 'lr' }, ''), 'reload', 'a fresh tab picks up the game in progress');
+  assert.equal(decide({ date: '2026-11-07', moves: 'x' }, { moves: 'lru' }, 'lrud'), 'replay', 'a finished result stands: this tab becomes a replay');
+});
+
+test('Setup keeps one saved game per Challenge level, in Play and on the Board', () => {
+  const key = G.saved.key;
+  const keys = ['play', 'board'].flatMap(m => [key(m, 'classic', 'easy'), ...E.CHALLENGE_ORDER.map(l => key(m, 'challenge', l))]);
+  assert.equal(new Set(keys).size, keys.length, 'every mode, kind and level has its own save');
+  assert.equal(key('play', 'classic', 'hard'), key('play', 'classic', 'easy'), 'Classic is one game whatever the level');
+  for (const k of keys) assert.match(k, /^2048\./, 'saves use the 2048. prefix');
+});
+
+test('hint reasons are concrete and name tiles; "safest" is a last resort', t => {
+  const tally = {};
+  let n = 0;
+  for (let s = 1; s <= 4; s++) {
+    const g = E.newGame(s * 7717);
+    while (!E.isOver(g.board) && g.slides < 300) {
+      const h = E.suggest(g.board);
+      tally[h.why] = (tally[h.why] || 0) + 1;
+      n++;
+      E.makeSlide(g, g.slides % 3 ? h.dir : E.analyze(g.board, 1).best); /* a student who takes the hint two times in three */
+    }
+  }
+  t.diagnostic(`${n} hints: ` + Object.entries(tally).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${pct(v, n)}`).join(', '));
+  assert.ok((tally.ahead || 0) / n < 0.05, `"safest" in ${pct(tally.ahead || 0, n)}`);
+  assert.ok((tally.corner || 0) / n < 0.5, `"keeps your ... in its corner" in ${pct(tally.corner || 0, n)}`);
+  /* Left makes four merges, the biggest a 16: the hint says so, not "sets up a merge" */
+  const many = [1, 1, 1, 1, 2, 2, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0];
+  assert.deepEqual(JSON.parse(JSON.stringify(E.explain(many, 'left', 'down', true))).why, 'merge');
+  assert.equal(E.explain(many, 'left', 'down', true).exp, 4);
+  /* down keeps the 512 in its corner, right moves it out: named, with the 512 outlined after each slide */
+  const corner = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 2, 0, 0];
+  const c = E.explain(corner, 'down', 'right');
+  assert.deepEqual([c.why, c.exp, Array.from(c.mark.a), Array.from(c.mark.b)], ['corner', 9, [12], [14]]);
 });

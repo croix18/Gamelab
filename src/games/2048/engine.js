@@ -109,7 +109,7 @@ function tileFor(board, seed, k) {
 
 /* A game: its seed, the board, the score, its slides so far ('l', 'u', 'r', 'd') and k, the tiles dealt. */
 function newGame(seed) {
-  const g = { seed: seed >>> 0, board: new Array(CELLS).fill(0), k: 0, score: 0, slides: 0, moves: '' };
+  const g = { seed: seed >>> 0, board: new Array(CELLS).fill(0), k: 0, score: 0, slides: 0, moves: '', lastMerge: 0, mergeAt: 0 };
   for (let i = 0; i < 2; i++) { const t = tileFor(g.board, g.seed, g.k++); g.board[t.at] = t.exp; }
   return g;
 }
@@ -128,6 +128,7 @@ function makeSlide(g, dir) {
   g.score += r.score;
   g.slides++;
   g.moves += DIR_CH[dir];
+  if (r.merges.length) { g.lastMerge = biggestMerge(r.merges); g.mergeAt = g.slides; } /* the latest merge, and the slide that made it */
   return r;
 }
 /* Rebuilds a game from its seed and its slides; stops at the first slide that can't be made. */
@@ -293,20 +294,20 @@ function analyze(board, depth) {
 const lookMove = board => analyze(board, LOOK_DEPTH).best;
 const carefulMove = board => analyze(board, CAREFUL_DEPTH).best;
 
-/* ---------- why a slide is good, in a few words ---------- */
-function inCorner(board) {
-  const top = maxExp(board);
-  return top > 0 && (board[0] === top || board[3] === top || board[12] === top || board[15] === top);
-}
-function pairCount(board) {
-  let n = 0;
+/* ---------- why a slide is good: concrete reasons that name the tiles ---------- */
+const CORNERS = [0, 3, 12, 15];
+/* every pair of equal tiles side by side: { exp, cells } */
+function pairsIn(board) {
+  const out = [];
   for (let i = 0; i < CELLS; i++) {
-    if (!board[i]) continue;
-    if (i % 4 < 3 && board[i] === board[i + 1]) n++;
-    if (i < 12 && board[i] === board[i + 4]) n++;
+    const e = board[i];
+    if (!e) continue;
+    if (i % 4 < 3 && board[i + 1] === e) out.push({ exp: e, cells: [i, i + 1] });
+    if (i < 12 && board[i + 4] === e) out.push({ exp: e, cells: [i, i + 4] });
   }
-  return n;
+  return out;
 }
+/* how far the rows and columns are from rising or falling steadily */
 function disorder(board) {
   let n = 0;
   for (const dir of ['left', 'up']) {
@@ -321,28 +322,62 @@ function disorder(board) {
   }
   return n;
 }
-function features(board, dir) {
-  const r = slide(board, dir);
-  return { moved: r.moved, merge: biggestMerge(r.merges), empty: emptyCount(r.board), corner: inCorner(r.board), pairs: pairCount(r.board), disorder: disorder(r.board) };
+/* What one slide does, before its new tile arrives. */
+function outcome(board, dir) {
+  const r = slide(board, dir), top = maxExp(r.board);
+  return {
+    moved: r.moved, board: r.board, merges: r.merges, merge: biggestMerge(r.merges), empty: emptyCount(r.board), top,
+    corner: top ? CORNERS.filter(i => r.board[i] === top) : [], pairs: pairsIn(r.board), disorder: disorder(r.board)
+  };
 }
-/* Why `dir` beats the other slides (or, given `than`, that one slide), as a reason code:
-   only | corner | into-corner | merge (with exp) | space | setup | order | ahead */
-function reason(board, dir, than) {
-  const me = features(board, dir);
-  const others = (than ? [than] : DIRS.filter(d => d !== dir)).map(d => features(board, d)).filter(f => f.moved);
-  if (!others.length) return { why: 'only' };
-  if (me.corner && others.some(f => !f.corner)) return { why: inCorner(board) ? 'corner' : 'into-corner' };
-  if (me.merge >= 3 && others.every(f => f.merge < me.merge)) return { why: 'merge', exp: me.merge };
-  if (others.every(f => f.empty < me.empty)) return { why: 'space' };
-  if (others.every(f => f.pairs < me.pairs)) return { why: 'setup' };
-  if (others.every(f => f.disorder > me.disorder)) return { why: 'order' };
-  return { why: 'ahead' };
+/* Why slide `dir` beats slide `than` (the slide that was made, or the next-best slide), with the tiles it is about.
+   { why: 'only' | 'merge' | 'corner' | 'into-corner' | 'merges' | 'pair' | 'space' | 'order' | 'ahead',
+     exp?, n?, m?, fresh?, kept?, mark: { a: cells to outline after dir, b: cells to outline after than } }
+   Concrete reasons come first; 'ahead' (safest a few slides ahead) is the last resort. With `own` (a hint), when
+   nothing sets the two slides apart, a concrete thing the slide does comes before 'order' and 'ahead'. */
+function explain(board, dir, than, own) {
+  const A = outcome(board, dir), B = than ? outcome(board, than) : null;
+  const none = { a: [], b: [] };
+  if (!B || !B.moved) return { why: 'only', mark: none };
+  const top = maxExp(board);
+  const madeAt = (o, e) => o.merges.filter(x => x.exp === e).map(x => x.at);
+  /* it makes a bigger tile (an 8 or more) */
+  if (A.merge >= 3 && A.merge > B.merge) return { why: 'merge', exp: A.merge, mark: { a: madeAt(A, A.merge), b: [] } };
+  /* it keeps the biggest tile (an 8 or more) in a corner, or puts it there, and the other slide doesn't */
+  if (top >= 3 && A.top === top && A.corner.length && !B.corner.length) {
+    const was = CORNERS.some(i => board[i] === top);
+    return { why: was ? 'corner' : 'into-corner', exp: top, mark: { a: A.corner.slice(0, 1), b: [B.board.indexOf(B.top)] } };
+  }
+  /* it makes more merges */
+  if (A.merges.length >= 2 && A.merges.length > B.merges.length) return { why: 'merges', n: A.merges.length, mark: { a: A.merges.map(x => x.at), b: [] } };
+  /* it lines up the biggest pair of equal tiles that the other slide doesn't */
+  const has = (pairs, e) => pairs.some(p => p.exp === e);
+  const pair = A.pairs.filter(p => p.exp >= 2 && !has(B.pairs, p.exp)).sort((x, y) => y.exp - x.exp)[0];
+  if (pair) {
+    const fresh = pair.cells.some(c => A.merges.some(x => x.at === c && x.exp === pair.exp));
+    return { why: 'pair', exp: pair.exp, fresh, kept: !fresh && has(pairsIn(board), pair.exp), mark: { a: pair.cells, b: [] } };
+  }
+  if (A.empty > B.empty) return { why: 'space', n: A.empty, m: B.empty, mark: none };
+  if (A.merge > B.merge) return { why: 'merge', exp: A.merge, mark: { a: madeAt(A, A.merge), b: [] } };
+  if (own) {
+    const made = A.pairs.filter(p => p.exp >= 2 && p.cells.some(c => A.merges.some(x => x.at === c && x.exp === p.exp))).sort((x, y) => y.exp - x.exp)[0];
+    if (A.merge >= 3) return { why: 'merge', exp: A.merge, mark: { a: madeAt(A, A.merge), b: [] } };
+    if (made) return { why: 'pair', exp: made.exp, fresh: true, mark: { a: made.cells, b: [] } };
+    if (A.merges.length >= 2) return { why: 'merges', n: A.merges.length, mark: { a: A.merges.map(x => x.at), b: [] } };
+    if (top >= 3 && A.top === top && A.corner.length && CORNERS.some(i => board[i] === top)) return { why: 'corner', exp: top, mark: { a: A.corner.slice(0, 1), b: [] } };
+    if (A.merge) return { why: 'merge', exp: A.merge, mark: { a: madeAt(A, A.merge), b: [] } };
+  }
+  if (A.disorder <= B.disorder) return { why: 'order', mark: none };
+  return { why: 'ahead', mark: none };
 }
-/* The hint: the look-ahead player's slide and why. */
+/* The hint: the look-ahead player's slide, and why it beats the next-best slide. */
 function suggest(board) {
   const a = analyze(board, LOOK_DEPTH);
-  return a.best ? Object.assign({ dir: a.best }, reason(board, a.best)) : null;
+  if (!a.best) return null;
+  const next = DIRS.filter(d => d !== a.best && a.values[d] !== null).sort((x, y) => a.values[y] - a.values[x])[0];
+  return Object.assign({ dir: a.best }, explain(board, a.best, next, true));
 }
+
 /* ---------- whole games: the Daily card, the tests and the Challenge limits ---------- */
 /* One slide of game g by a player ('look' or 'careful'); false once the board is stuck. */
 function botSlide(g, who) {
