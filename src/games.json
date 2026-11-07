@@ -27,6 +27,18 @@
         "engine.js",
         "game.js"
       ]
+    },
+    {
+      "id": "2048",
+      "title": "2048",
+      "file": "2048.html",
+      "css": [
+        "game.css"
+      ],
+      "js": [
+        "engine.js",
+        "game.js"
+      ]
     }
   ]
 }

@@ -4,7 +4,7 @@ Updated 4 November 2026.
 
 Games students want to play that happen to demand reasoning: an even mix of math and logic or strategy, played by early finishers, in set-aside game time, by the whole class on the board, and at home. Each game is one self-contained HTML file, every game is also in the hub, and Croix puts them on the class Google Site.
 
-**Done:** the kit, Make 24 (Play, Daily, Board), and this repo.
+**Done:** the kit and the foundation (sources, a build, tests, a browser check), and three games: Make 24, Codebreaker and 2048, each with Play, Daily and Board, reviewed by a fresh player and a bug hunter and fixed.
 
 ## Calls on the brainstorm
 
@@ -165,7 +165,7 @@ Surround territory and capture stones, taught from the first stone the way Tempo
 
 ## Timeline (targets)
 
-- **By Thanksgiving break:** the foundation, Codebreaker and 2048.
+- **By Thanksgiving break:** the foundation, Codebreaker and 2048. Done 7 November.
 - **By winter break:** Tempo, so students have chess at home over the break.
 - **January:** the arithmetic grid and Pattern Hunt.
 - **February:** Hold or Roll and Hex.

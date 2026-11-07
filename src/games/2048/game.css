@@ -1,0 +1,225 @@
+/* ===== 2048 ===== */
+:root { --t48-well: #E9DFCA; --t48-hole: #F6F0E4; }
+.t48-host { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.t48-game {
+  flex: 1; display: flex; min-height: 0;
+  --t48-move: 110ms; /* keep in step with MOVE_MS in game.js */
+  --t48-eqf: clamp(1.05rem, 3vh, 2.2rem);
+}
+
+/* ---------- tiles: sand and pale turquoise, deepening through turquoise and teal to navy; 2048 is gold ---------- */
+.t48-e1 { background: #EAD6AE; color: var(--navy); }
+.t48-e2 { background: #CFF2EC; color: var(--navy); }
+.t48-e3 { background: #A3E9E0; color: var(--navy); }
+.t48-e4 { background: #74DCD1; color: var(--navy); }
+.t48-e5 { background: #3FCFC1; color: var(--navy); }
+.t48-e6 { background: #1FB1A8; color: var(--navy); }
+.t48-e7 { background: #15939B; color: var(--white); }
+.t48-e8 { background: #127A85; color: var(--white); }
+.t48-e9 { background: #0F5C6D; color: var(--white); }
+.t48-e10 { background: var(--navy); color: var(--white); }
+.t48-e11 { background: #F2B640; color: var(--navy); }
+.t48-e12 { background: #0B1C2D; color: #F2B640; }
+.t48-pw { white-space: nowrap; }
+sup.t48-ex { font-size: .56em; line-height: 0; position: relative; top: -.68em; margin-left: .03em; vertical-align: baseline; letter-spacing: 0; }
+
+/* ---------- the stage: one column on phones; on wider screens the board, with its panel beside it ---------- */
+.t48-stage {
+  flex: 1; min-width: 0; min-height: 0; container-type: size;
+  display: flex; flex-direction: column; gap: clamp(.55rem, 1.5vh, 1rem);
+  padding: clamp(.9rem, 2.2vh, 1.5rem) clamp(.9rem, 2vw, 1.9rem);
+  touch-action: none; /* no swipe anywhere on the game scrolls or zooms the page */
+}
+.t48-head { display: flex; flex-direction: column; gap: clamp(.45rem, 1.2vh, .8rem); }
+.t48-stats { display: flex; flex-wrap: wrap; gap: .4rem clamp(1.2rem, 2.4vw, 2.2rem); }
+.t48-stat { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+.t48-stat b { font-weight: 900; font-size: clamp(1.45rem, 4.4vh, 2.7rem); line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* slides left, with its own bar in a neutral colour */
+.t48-left { min-width: 6.2rem; }
+.t48-lbar { display: block; height: 6px; margin-top: .3rem; border-radius: 999px; background: #EEE6D7; overflow: hidden; }
+.t48-lbar i { display: block; height: 100%; border-radius: inherit; background: #8D99A6; transform-origin: left; transition: transform .2s ease; }
+
+.t48-play {
+  flex: 1 1 0; min-height: 0; container-type: size;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-user-select: none; user-select: none;
+  --t48-s: min(100cqw, 100cqh);
+}
+
+/* ---------- the board ---------- */
+.t48-board {
+  --t48-g: calc(var(--t48-s) * .03);
+  --t48-cell: calc((var(--t48-s) - 5 * var(--t48-g)) / 4);
+  position: relative; flex: none; width: var(--t48-s); height: var(--t48-s); padding: var(--t48-g);
+  border-radius: calc(var(--t48-s) * .045); background: var(--t48-well);
+}
+.t48-cells { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); gap: var(--t48-g); width: 100%; height: 100%; }
+.t48-cells i { border-radius: calc(var(--t48-cell) * .12); background: var(--t48-hole); }
+.t48-tiles { position: absolute; inset: var(--t48-g); }
+.t48-tile {
+  position: absolute; left: 0; top: 0; width: var(--t48-cell); height: var(--t48-cell);
+  transform: translate(calc(var(--t48-x) * (var(--t48-cell) + var(--t48-g))), calc(var(--t48-y) * (var(--t48-cell) + var(--t48-g))));
+  transition: transform var(--t48-move) ease-in-out;
+}
+.t48-under { z-index: 1; }
+.t48-new { z-index: 1; }
+.t48-merged { z-index: 2; }
+.t48-face {
+  width: 100%; height: 100%; border-radius: calc(var(--t48-cell) * .12);
+  display: grid; place-items: center; font-weight: 900; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  font-size: calc(var(--t48-cell) * .5);
+  box-shadow: 0 calc(var(--t48-cell) * .045) 0 rgba(23, 50, 77, .13);
+}
+.t48-face[data-d="d2"] { font-size: calc(var(--t48-cell) * .46); }
+.t48-face[data-d="d3"] { font-size: calc(var(--t48-cell) * .37); }
+.t48-face[data-d="d4"] { font-size: calc(var(--t48-cell) * .29); }
+.t48-face[data-d="d5"] { font-size: calc(var(--t48-cell) * .235); }
+.t48-face[data-d="p1"] { font-size: calc(var(--t48-cell) * .44); }
+.t48-face[data-d="p2"] { font-size: calc(var(--t48-cell) * .37); }
+.t48-merged .t48-face { animation: t48-pop .2s ease var(--t48-move) both; }
+.t48-new .t48-face { animation: t48-in .2s ease var(--t48-move) both; }
+.t48-nudge { animation: t48-nudge .22s ease; }
+@keyframes t48-pop { 0% { transform: scale(.5); opacity: 0; } 55% { transform: scale(1.1); opacity: 1; } 100% { transform: none; } }
+@keyframes t48-in { from { transform: scale(.25); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes t48-nudge { 40% { transform: translate(var(--t48-nx), var(--t48-ny)); } }
+
+/* ---------- the merge, as an equation: under the board on phones, beside it on wider screens ---------- */
+.t48-eq { flex: none; min-height: calc(var(--t48-eqf) * 2.1); max-width: 100%; display: flex; align-items: center; justify-content: center; font-size: var(--t48-eqf); }
+.t48-sum { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .3em .32em; font-weight: 900; transition: opacity .25s ease; animation: t48-fade .18s ease backwards; }
+.t48-ln { display: inline-flex; align-items: center; gap: .32em; white-space: nowrap; }
+.t48-q { display: inline-grid; place-items: center; min-width: 2em; height: 1.6em; padding: 0 .42em; border-radius: .34em; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.t48-op { color: var(--teal); }
+.t48-prod { display: inline-flex; align-items: center; gap: .2em; }
+.t48-dim .t48-sum { opacity: .35; } /* the latest merge stays up, dimmed, until the next one */
+.t48-tip { font-size: clamp(.95rem, 2.2vh, 1.15rem); font-weight: 500; color: var(--teal); text-align: center; }
+.t48-tip-touch { display: none; }
+@media (hover: none), (pointer: coarse) { .t48-tip-touch { display: inline; } .t48-tip-keys { display: none; } }
+@keyframes t48-fade { from { opacity: .3; } }
+
+/* ---------- hint, end of game, actions ---------- */
+.t48-info { min-height: 3.9rem; display: flex; flex-direction: column; justify-content: center; }
+.t48-hint { background: var(--cream); border-radius: 14px; padding: .65rem .9rem .65rem .65rem; }
+.t48-hint .label { display: block; margin: 0 0 .3rem .15rem; }
+.t48-hint p { margin: 0; display: flex; align-items: center; gap: .7rem; font-size: clamp(1rem, 2.4vh, 1.3rem); font-weight: 500; line-height: 1.25; }
+.t48-hint b { font-weight: 900; }
+.t48-hint .t48-arrow { flex: none; width: 2.3em; height: 2.3em; border-radius: 50%; background: var(--accent); color: var(--navy); }
+.t48-hint .t48-arrow svg { width: 1.15em; height: 1.15em; }
+.t48-end { margin: 0; font-weight: 900; font-size: clamp(1.45rem, 3.8vh, 2.3rem); line-height: 1.1; }
+.t48-actions { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.t48-arrow { display: inline-grid; place-items: center; vertical-align: middle; }
+.t48-arrow svg { width: 1em; height: 1em; display: block; }
+.t48-to-up svg { transform: rotate(90deg); }
+.t48-to-right svg { transform: rotate(180deg); }
+.t48-to-down svg { transform: rotate(-90deg); }
+
+/* ---------- Board: arrows the teacher taps ---------- */
+.t48-pad { --t48-pb: clamp(3rem, 6.4vh, 4.6rem); display: grid; grid-template-columns: repeat(3, var(--t48-pb)); grid-template-areas: ". up ." "left . right" ". down ."; gap: .35rem; justify-content: center; }
+.t48-pad-btn { width: var(--t48-pb); height: var(--t48-pb); border: 0; border-radius: 50%; padding: 0; background: var(--accent-pale); color: var(--navy); display: grid; place-items: center; }
+.t48-pad-btn .t48-arrow svg { width: calc(var(--t48-pb) * .42); height: calc(var(--t48-pb) * .42); }
+.t48-pad-btn[data-dir="up"] { grid-area: up; }
+.t48-pad-btn[data-dir="left"] { grid-area: left; }
+.t48-pad-btn[data-dir="right"] { grid-area: right; }
+.t48-pad-btn[data-dir="down"] { grid-area: down; }
+.t48-pad-btn.t48-pad-hint { background: var(--accent); box-shadow: 0 0 0 4px var(--white), 0 0 0 7px var(--accent); }
+.t48-pad-btn:disabled { opacity: .4; cursor: default; }
+.t48-pad-btn:active:not(:disabled) { transform: translateY(1px) scale(.96); }
+@media (max-width: 559px) { .t48-pad { display: none; } }
+
+@media (min-aspect-ratio: 1/1) and (min-width: 640px) {
+  .t48-game { --t48-side: clamp(15rem, 27vw, 26rem); --t48-cgap: clamp(1.5rem, 3.6vw, 4.5rem); }
+  .t48-stage {
+    display: grid; grid-template-columns: auto var(--t48-side); grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+    grid-template-areas: "play head" "play eq" "play info" "play pad" "play actions" "play .";
+    column-gap: var(--t48-cgap); row-gap: clamp(.8rem, 2.4vh, 1.6rem); justify-content: center;
+  }
+  .t48-play {
+    grid-area: play; container-type: normal; align-self: center;
+    --t48-s: min(100cqh, 100cqw - var(--t48-side) - var(--t48-cgap));
+    width: var(--t48-s); height: var(--t48-s);
+  }
+  .t48-head { grid-area: head; }
+  /* the equation, big, in the panel: one line per step */
+  .t48-eq { grid-area: eq; justify-content: flex-start; min-height: 0; font-size: clamp(1.3rem, min(4.8vh, calc(var(--t48-side) / 8.6)), 3.8rem); }
+  .t48-sum { flex-direction: column; align-items: flex-start; gap: .28em; }
+  .t48-tip { text-align: left; }
+  .t48-info { grid-area: info; justify-content: flex-start; min-height: 6.2rem; }
+  .t48-pad { grid-area: pad; justify-content: start; }
+  .t48-actions { grid-area: actions; }
+}
+
+/* ---------- small boards: the results card, the review, how to play ---------- */
+.t48-mini {
+  --t48-m: clamp(2.2rem, 6.4vh, 3rem);
+  display: inline-grid; grid-template-columns: repeat(4, var(--t48-m)); gap: calc(var(--t48-m) * .1);
+  padding: calc(var(--t48-m) * .12); border-radius: calc(var(--t48-m) * .28); background: var(--t48-well);
+}
+.t48-mini > span {
+  width: var(--t48-m); height: var(--t48-m); border-radius: calc(var(--t48-m) * .18);
+  display: grid; place-items: center; font-weight: 900; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+  font-size: calc(var(--t48-m) * .5);
+}
+:where(.t48-mini > span) { background: var(--t48-hole); } /* an empty square; a tile's own color wins */
+.t48-mini > span[data-d="d2"] { font-size: calc(var(--t48-m) * .44); }
+.t48-mini > span[data-d="d3"] { font-size: calc(var(--t48-m) * .35); }
+.t48-mini > span[data-d="d4"] { font-size: calc(var(--t48-m) * .28); }
+.t48-mini > span[data-d="d5"] { font-size: calc(var(--t48-m) * .22); }
+.t48-mini > span[data-d="p1"] { font-size: calc(var(--t48-m) * .42); }
+.t48-mini > span[data-d="p2"] { font-size: calc(var(--t48-m) * .35); }
+.t48-mini > span.t48-key { position: relative; z-index: 1; box-shadow: 0 0 0 calc(var(--t48-m) * .06) var(--white), 0 0 0 calc(var(--t48-m) * .13) var(--navy); }
+.t48-results .t48-mini { margin: .1rem auto .2rem; }
+.t48-results .r-stats { gap: .4rem 1.5rem; }
+.r-stat .t48-pw { font-size: 1em; font-weight: inherit; color: inherit; letter-spacing: 0; text-transform: none; }
+/* "Look-ahead player: 2,004", and a cheer when the student beats it */
+.t48-vs { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: .35rem .6rem; font-size: 1.05rem; font-weight: 700; color: var(--teal); }
+.t48-vs b { color: var(--navy); font-weight: 900; font-variant-numeric: tabular-nums; }
+.t48-won { background: var(--accent); color: var(--navy); font-weight: 900; border-radius: 999px; padding: .25rem .85rem; }
+.t48-beat .t48-won { animation: t48-pop .45s ease both; }
+
+.t48-sheet h2 sup.t48-ex, .t48-end sup.t48-ex { top: -.72em; }
+.t48-review { width: min(72rem, 100%); }
+.t48-review .r-stats { justify-content: flex-start; }
+.t48-costs-label { margin-top: .4rem; }
+/* each costly slide: the board after it, beside the board after the better slide */
+.t48-costs { display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem; }
+.t48-cost { --t48-cm: clamp(1.4rem, 3.9vh, 2.3rem); width: min-content; max-width: 100%; background: var(--cream); border-radius: 14px; padding: .75rem .8rem .85rem; display: flex; flex-direction: column; align-items: center; gap: .5rem; text-align: center; }
+.t48-cost .t48-mini { --t48-m: var(--t48-cm); }
+.t48-pair { display: flex; gap: .8rem; }
+.t48-pair figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: .35rem; }
+.t48-pair figcaption { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; font-weight: 500; color: var(--teal); }
+.t48-pair figcaption b { color: var(--navy); font-weight: 900; }
+.t48-pair figcaption .t48-arrow { margin-left: .1rem; color: var(--navy); }
+.t48-why, .t48-none, .t48-wait { font-weight: 500; }
+.t48-none, .t48-wait { width: 100%; text-align: center; }
+.t48-wait { color: var(--teal); }
+@media (max-width: 480px) { .t48-cost { --t48-cm: 1.75rem; } }
+/* the Board's review: big enough to read across a classroom */
+.t48-big { width: min(110rem, 100%); }
+.t48-big .t48-cost { --t48-cm: clamp(1.8rem, min(5.2vh, 2.85vw), 3.6rem); padding: 1rem 1.1rem 1.1rem; gap: .7rem; }
+.t48-big h2 { font-size: clamp(1.45rem, 4.2vh, 3rem); }
+.t48-big .label, .t48-big .r-stat span { font-size: clamp(.72rem, 2.25vh, 1.6rem); }
+.t48-big .r-stat b { font-size: clamp(1.7rem, 5vh, 3.6rem); }
+.t48-big .t48-why, .t48-big .t48-none, .t48-big .t48-wait, .t48-big figcaption { font-size: clamp(1rem, 2.6vh, 2rem); }
+.t48-big .btn { font-size: clamp(1rem, 2.4vh, 1.8rem); min-height: 2.4em; padding: .5em 1.3em; }
+.t48-cheer { align-items: center; text-align: center; }
+.t48-cheer .sheet-foot { justify-content: center; }
+
+.t48-setup .t48-levels { display: flex; flex-direction: column; gap: .8rem; }
+.t48-goal { font-weight: 500; color: var(--teal); }
+.t48-chipx { margin-left: .4rem; padding: .1rem .45rem; border-radius: 7px; background: rgba(255, 255, 255, .75); font-weight: 900; }
+
+/* ---------- front page art and how to play ---------- */
+.t48-art { display: flex; align-items: center; gap: clamp(.4rem, 1.2vw, .75rem); }
+.t48-art span { min-width: clamp(3rem, 9vh, 4.2rem); height: clamp(3rem, 9vh, 4.2rem); padding: 0 .5em; border-radius: 12px; display: grid; place-items: center; font-weight: 900; font-size: clamp(1.15rem, 3.4vh, 1.65rem); letter-spacing: -.02em; box-shadow: 3px 4px 0 var(--shadow); }
+.t48-art i { font-style: normal; font-weight: 900; font-size: clamp(1.25rem, 3.6vh, 1.8rem); color: var(--teal); }
+.t48-howto-ex { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem .5rem; }
+.t48-howto-step { flex-basis: 100%; font-weight: 700; }
+.t48-exrow { --t48-m: 1.7rem; }
+.t48-then { width: 1.1rem; height: 1.1rem; color: var(--teal); flex: none; }
+.t48-keys { font-size: .85rem; font-weight: 500; color: var(--teal); }
+.t48-keys b { color: var(--navy); }
+@media (hover: none), (pointer: coarse) { .t48-keys { display: none; } }
+@media (max-width: 480px) {
+  .t48-howto-ex { flex-direction: column; align-items: flex-start; gap: .3rem; }
+  .t48-howto-step { flex-basis: auto; }
+  .t48-then { transform: rotate(90deg); margin-left: 2.6rem; }
+}

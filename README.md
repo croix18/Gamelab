@@ -10,7 +10,8 @@ Students reach the games through the class Google Site (GitHub and the class web
 | --- | --- |
 | `game-lab.html` | The Game Lab hub, with every game in it (built) |
 | `make-24.html` | Make 24 on its own, opening straight to the game (built) |
-| `codebreaker.html` | Codebreaker on its own (built) |
+| `codebreaker.html` | Codebreaker on its own, opening straight to the game (built) |
+| `2048.html` | 2048 on its own, opening straight to the game (built) |
 | `src/` | The source: the kit, the font, and each game in `src/games/<id>/` |
 | `src/games.json` | Which games are in, in hub order, and their file names |
 | `tools/build.mjs` | Writes the built files from `src/` |
@@ -51,6 +52,14 @@ A game lives in `src/games/<id>/`: its CSS, its script files (wrapped together s
 - **Daily**: one Medium code, the same on every device that day, ending on a results card with each guess's clue marks.
 - **Board**: for the panel, with the number of codes that still fit after every guess.
 - Hints climb a ladder (how many codes still fit, a fact the clues prove, a strong next guess), then Show me. After every round: the codes left after each guess, the guess that ruled out the most, and any guess that broke an earlier clue.
+
+**2048.** Slide the tiles; two matching tiles merge into one worth double. Make a 2048 tile before the board fills.
+
+- **Play**: Classic, saved in the browser to finish later, or a Challenge: 128 in 120 slides, 256 in 220, 512 in 420.
+- **Daily**: 150 slides on the same tiles for everyone that day, ending on a card with the final board, the score, the biggest tile and the look-ahead player's score on the same tiles.
+- **Board**: for the panel, with big arrows to tap while the class votes each slide.
+- Tiles as numbers (32) or powers (2⁵), with each slide's biggest merge under the board as an equation: 2⁵ + 2⁵ = 2¹ · 2⁵ = 2⁶.
+- **Hint** is the look-ahead player's slide and why. After every game, the slides that cost the most.
 
 ## Rules every game follows
 
