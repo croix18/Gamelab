@@ -37,13 +37,13 @@ button { cursor: pointer; touch-action: manipulation; -webkit-user-select: none;
 .label { margin: 0; color: var(--teal); font-weight: 700; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
 
 /* ---------- controls ---------- */
-.btn { border: 0; border-radius: 999px; background: var(--paleturq); color: var(--navy); font-weight: 700; font-size: 1rem; padding: .65rem 1.3rem; min-height: 2.75rem; white-space: nowrap; }
+.btn { border: 0; border-radius: 999px; background: var(--accent-pale); color: var(--navy); font-weight: 700; font-size: 1rem; padding: .65rem 1.3rem; min-height: 2.75rem; white-space: nowrap; }
 .btn.primary { background: var(--accent); font-weight: 900; }
 .btn.sand { background: var(--sand); }
 .btn:disabled { opacity: .4; cursor: default; }
 .mini { border: 0; border-radius: 999px; background: var(--sand); color: var(--navy); font-weight: 700; font-size: .85rem; padding: .3rem .85rem; min-height: 2rem; white-space: nowrap; }
 .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.chip { background: var(--paleturq); color: var(--navy); border: 0; border-radius: 999px; font-weight: 700; font-size: 14px; padding: 0 14px; min-height: 40px; font-variant-numeric: tabular-nums; }
+.chip { background: var(--accent-pale); color: var(--navy); border: 0; border-radius: 999px; font-weight: 700; font-size: 14px; padding: 0 14px; min-height: 40px; font-variant-numeric: tabular-nums; }
 .chip[aria-pressed="true"] { background: var(--accent); font-weight: 900; }
 
 /* ---------- dock: the one chrome bar ---------- */
@@ -94,6 +94,9 @@ button { cursor: pointer; touch-action: manipulation; -webkit-user-select: none;
 .r-key .r-sq { width: 1.35rem; font-size: .75rem; border-radius: 5px; }
 .r-key .r-sq.helped { box-shadow: inset 0 0 0 2px var(--accent); }
 .results .sheet-foot { justify-content: center; }
+/* a replay: one plain badge, and everything that could pass for today's result greyed out */
+.r-replay { background: var(--sand); color: var(--navy); font-weight: 900; font-size: .95rem; border-radius: 999px; padding: .35rem 1rem; }
+.results.replay > :not(.r-replay):not(.r-game):not(.sheet-foot) { filter: grayscale(1); opacity: .55; }
 
 /* ---------- hub ---------- */
 .hub { display: flex; flex-direction: column; gap: var(--gap); }

@@ -114,7 +114,11 @@
         else if (!e.shiftKey && doc.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     }
-    back.addEventListener('click', e => { if (e.target === back || e.target.closest('[data-close]')) close(); });
+    const opened = Date.now(); /* the second tap of a double tap that opened the sheet must not close it */
+    back.addEventListener('click', e => {
+      if (Date.now() - opened < 450) return;
+      if (e.target === back || e.target.closest('[data-close]')) close();
+    });
     doc.addEventListener('keydown', onKey, true);
     doc.body.appendChild(back);
     (box.querySelector('[data-close]') || box).focus({ preventScroll: true });
@@ -128,16 +132,18 @@
     helped: ['✓', 'solved with hints'],
     shown: ['–', 'answer shown']
   };
-  /* r: { game, sub, squares?: ['clean' | 'helped' | 'shown'], body?: html of the game's own, stats: [[value, label]], key?: false } */
+  /* r: { game, sub, squares?: ['clean' | 'helped' | 'shown'], body?: html of the game's own, stats: [[value, label]], key?: false,
+          replay?: true — a Daily played again: the card says so and greys out, so it can't pass for the day's result } */
   Lab.results = function (r, opts) {
     const sq = r.squares || [];
     const squares = sq.length ? '<div class="r-squares">' + sq.map((s, i) => '<span class="r-sq ' + s + '" role="img" aria-label="' + (i + 1) + ': ' + SQ[s][1] + '">' + SQ[s][0] + '</span>').join('') + '</div>' : '';
     const stats = r.stats.map(s => '<div class="r-stat"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>').join('');
     const key = sq.length && r.key !== false ? '<p class="r-key">' + ['clean', 'helped', 'shown'].map(s => '<i><span class="r-sq ' + s + '" aria-hidden="true">' + SQ[s][0] + '</span>' +
       (s === 'clean' ? 'No hints' : s === 'helped' ? 'With hints' : 'Shown') + '</i>').join('') + '</p>' : '';
-    const html = '<p class="r-game">' + esc(r.game) + '</p><p class="r-sub">' + esc(r.sub) + '</p>' + squares + (r.body || '') +
-      '<div class="r-stats">' + stats + '</div>' + key;
-    return Lab.sheet(html, Object.assign({ cls: 'results', label: r.game + ' results' }, opts));
+    const html = (r.replay ? '<p class="r-replay">Replay · not today\u2019s result</p>' : '') +
+      '<p class="r-game">' + esc(r.game) + '</p><p class="r-sub">' + esc(r.sub) + '</p>' + squares + (r.body || '') +
+      '<div class="r-stats">' + stats + '</div>' + (r.replay ? '' : key);
+    return Lab.sheet(html, Object.assign({ cls: 'results' + (r.replay ? ' replay' : ''), label: r.game + (r.replay ? ' replay' : '') + ' results' }, opts));
   };
 
   /* ---------- screens: hub, a game's front page, a mode ---------- */
