@@ -1552,13 +1552,13 @@ const GOAL = 11; /* 2048 */
 const DAILY_SLIDES = 150;
 const LOOK_DEPTH = 3; /* the look-ahead player always thinks three slides deep: never a time limit */
 const CAREFUL_DEPTH = 2; /* the careful player the Challenge limits are set for thinks two slides deep */
-/* Challenges: make the goal tile within the slide limit. The brief started them at 120, 220 and 420 slides;
-   these are set by simulation (tests/2048.test.mjs runs it again): each is the smallest multiple of 10 that
-   the careful player makes in at least 95% of 400 seeded games. */
+/* Challenges: make the goal tile within the slide limit. The limits are the brief's, checked by simulation
+   (tests/2048.test.mjs runs it again): a player who thinks one slide ahead makes Easy and Medium nearly every
+   time, and Hard takes real planning, which the careful player (two slides ahead) almost always makes. */
 const CHALLENGES = {
-  easy: { name: 'Easy', goal: 7, limit: 100 },
-  medium: { name: 'Medium', goal: 8, limit: 190 },
-  hard: { name: 'Hard', goal: 9, limit: 340 }
+  easy: { name: 'Easy', goal: 7, limit: 120 },
+  medium: { name: 'Medium', goal: 8, limit: 220 },
+  hard: { name: 'Hard', goal: 9, limit: 420 }
 };
 const CHALLENGE_ORDER = ['easy', 'medium', 'hard'];
 

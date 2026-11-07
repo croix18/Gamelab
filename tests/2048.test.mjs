@@ -183,7 +183,7 @@ test('the look-ahead player is strong: how often it reaches 512, 1024 and 2048',
   assert.ok(reach[11] >= 0.75 * N, '2048 in at least 75%');
 });
 
-test('the Challenge limits are set by simulation: the careful player makes each in at least 95% of games', t => {
+test('the Challenge limits make a ladder: Easy and Medium for nearly everyone, Hard for planners', t => {
   const N = 400, goals = E.CHALLENGE_ORDER.map(l => E.CHALLENGES[l].goal), top = Math.max(...goals);
   const play = depth => {
     const at = {}; /* at[goal]: the slide each game first made that tile (Infinity if never) */
@@ -199,14 +199,15 @@ test('the Challenge limits are set by simulation: the careful player makes each 
     return (e, limit) => at[e].filter(s => s <= limit).length / N;
   };
   const careful = play(E.CAREFUL_DEPTH), quick = play(1);
-  const start = { easy: 120, medium: 220, hard: 420 }; /* the brief's starting limits */
+  /* the share of games a player who thinks one slide ahead must make (at least), or must not make (Hard stays hard) */
+  const quickFloor = { easy: 0.95, medium: 0.85 }, quickCeiling = { hard: 0.6 };
   for (const level of E.CHALLENGE_ORDER) {
     const { name, goal, limit } = E.CHALLENGES[level];
-    const made = careful(goal, limit);
-    t.diagnostic(`${name}: ${E.VALUE[goal]} in ${limit} slides. Careful player (${E.CAREFUL_DEPTH} slides ahead) ${pct(made * N, N)}; ` +
-      `one slide ahead ${pct(quick(goal, limit) * N, N)}. At the brief's ${start[level]}: ${pct(careful(goal, start[level]) * N, N)} and ${pct(quick(goal, start[level]) * N, N)}`);
-    assert.ok(made >= 0.95, `${name}: the careful player makes it in ${pct(made * N, N)}`);
-    assert.ok(careful(goal, limit - 10) < 0.95, `${name}: ${limit - 10} slides would do, so the limit is out of date`);
+    const made = careful(goal, limit), madeQuick = quick(goal, limit);
+    t.diagnostic(`${name}: ${E.VALUE[goal]} in ${limit} slides. Careful player (${E.CAREFUL_DEPTH} slides ahead) ${pct(made * N, N)}; one slide ahead ${pct(madeQuick * N, N)}`);
+    assert.ok(made >= 0.95, `${name}: the careful player makes it in only ${pct(made * N, N)}`);
+    if (level in quickFloor) assert.ok(madeQuick >= quickFloor[level], `${name}: one slide ahead makes it in only ${pct(madeQuick * N, N)}`);
+    if (level in quickCeiling) assert.ok(madeQuick < quickCeiling[level], `${name}: one slide ahead makes it in ${pct(madeQuick * N, N)}, too easy for Hard`);
     assert.equal(limit % 10, 0);
   }
 });
