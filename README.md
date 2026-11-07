@@ -10,6 +10,7 @@ Students reach the games through the class Google Site (GitHub and the class web
 | --- | --- |
 | `game-lab.html` | The Game Lab hub, with every game in it (built) |
 | `make-24.html` | Make 24 on its own, opening straight to the game (built) |
+| `2048.html` | 2048 on its own, opening straight to the game (built) |
 | `src/` | The source: the kit, the font, and each game in `src/games/<id>/` |
 | `src/games.json` | Which games are in, in hub order, and their file names |
 | `tools/build.mjs` | Writes the built files from `src/` |
@@ -43,6 +44,14 @@ A game lives in `src/games/<id>/`: its CSS, its script files (wrapped together s
 - Number sets 1–9, 1–13, integers, fractions, decimals, powers and negative powers; Easy, Medium and Hard (plus Mixed on the board).
 - Hints climb a ladder (any powers, then the last move, then the first), then Show me and Another way.
 - Scaled back from the board version on purpose: no teams, no print sets, no typed-in hands.
+
+**2048.** Slide the tiles; two matching tiles merge into one worth double. Make a 2048 tile before the board fills.
+
+- **Play**: Classic, saved in the browser to finish later, or a Challenge: 128 in 100 slides, 256 in 190, 512 in 340.
+- **Daily**: 150 slides on the same tiles for everyone that day, ending on a card with the final board, the score, the biggest tile and the look-ahead player's score on the same tiles.
+- **Board**: for the panel, with big arrows to tap while the class votes each slide.
+- Tiles as numbers (32) or powers (2⁵), with each slide's biggest merge under the board as an equation: 2⁵ + 2⁵ = 2⁶.
+- **Hint** is the look-ahead player's slide and why. After every game, the slides that cost the most.
 
 ## Rules every game follows
 
