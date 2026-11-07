@@ -257,7 +257,7 @@
     const app = clearScreen();
     const done = game.dailyDone && game.dailyDone(Lab.today());
     app.innerHTML = '<div class="home"><section class="card home-card" aria-label="' + esc(game.name) + '">' +
-      '<h1 class="home-title">' + esc(game.name) + '</h1>' + (game.art || '') +
+      '<h1 class="home-title" style="--chars:' + Math.max(...String(game.name).split(/\s+/).map(w => w.length)) + '">' + esc(game.name) + '</h1>' + (game.art || '') +
       '<div class="modes">' + game.modes.map(m => '<button class="btn' + (m === 'play' ? ' primary' : '') + '" type="button" data-mode="' + m + '">' +
         MODE_NAME[m] + (m === 'daily' && done ? '<span class="done" aria-label="done today">✓</span>' : '') + '</button>').join('') + '</div>' +
       '<button class="mini" type="button" data-howto>How to play</button></section></div>';

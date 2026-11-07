@@ -113,7 +113,8 @@ button { cursor: pointer; touch-action: manipulation; -webkit-user-select: none;
 /* ---------- a game's own front page ---------- */
 .home { flex: 1; display: grid; place-items: center; min-height: 0; }
 .home-card { width: min(40rem, 100%); padding: clamp(1.2rem, 4.5vh, 2.6rem) clamp(1.2rem, 4vw, 3rem); display: flex; flex-direction: column; align-items: center; gap: clamp(.9rem, 2.8vh, 1.7rem); text-align: center; }
-.home-title { margin: 0; font-weight: 900; font-size: clamp(2.4rem, 7.5vh, 4.4rem); line-height: 1; letter-spacing: -.01em; }
+/* A long one-word name (Codebreaker) shrinks to fit a phone; short names keep the full size. --chars is the longest word's length. */
+.home-title { margin: 0; font-weight: 900; font-size: min(clamp(2.4rem, 7.5vh, 4.4rem), calc(137.5vw / var(--chars, 1))); line-height: 1; letter-spacing: -.01em; }
 .modes { display: flex; flex-wrap: wrap; justify-content: center; gap: .7rem; }
 .modes .btn { min-width: 8.5rem; font-size: 1.15rem; padding: .85rem 1.6rem; min-height: 3.2rem; }
 .modes .done { margin-left: .35rem; font-weight: 900; }
