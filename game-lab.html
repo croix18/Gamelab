@@ -243,6 +243,156 @@ sup.ex { font-size: .68em; line-height: 0; vertical-align: baseline; position: r
   .actions .next { padding-inline: 1.2rem; font-size: 1rem; }
 }
 
+/* ===== Codebreaker ===== */
+.cb-host { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.cb { --ph: var(--ph-all); flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.cb-stage { container-type: inline-size; flex: 1; display: flex; flex-direction: column; gap: clamp(.55rem, 1.6vh, 1.1rem); padding: clamp(.9rem, 2.2vh, 1.5rem) clamp(.9rem, 2vw, 1.9rem) clamp(.9rem, 2.2vh, 1.6rem); min-height: 0; outline: none; }
+.cb-top { display: flex; align-items: center; min-height: 1.1rem; }
+.cb-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: clamp(1rem, 3vw, 3.5rem); }
+.cb-m-board .cb-main { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+.cb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0; }
+
+/* ---------- the board: the code on top, then a row per guess. The pegs fit the space the board gets:
+   game.js sets --pw and --ph-all, the board's width and height measured in pegs. ---------- */
+.cb-field { container-type: size; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.cb-board { display: flex; justify-content: center; }
+.cb-rows { --peg: min(calc(100cqw / var(--pw)), calc(100cqh / var(--ph)), 6.5rem); display: flex; flex-direction: column; }
+.cb-m-board .cb-rows { --peg: min(calc(100cqw / var(--pw)), calc(100cqh / var(--ph)), 7.5rem); }
+.cb-row { display: flex; align-items: center; gap: calc(var(--peg) * .35); padding: calc(var(--peg) * .1) calc(var(--peg) * .25); border-radius: calc(var(--peg) * .34); }
+.cb-num { flex: none; width: calc(var(--peg) * .7); height: calc(var(--peg) * .62); display: grid; place-items: center; border-radius: 999px; color: var(--teal); font-weight: 700; font-size: calc(var(--peg) * .34); font-variant-numeric: tabular-nums; }
+.cb-pegs { display: flex; gap: calc(var(--peg) * .14); }
+.cb-peg { position: relative; flex: none; width: var(--peg); height: var(--peg); border: 0; padding: 0; border-radius: calc(var(--peg) * .24); background: var(--cream); display: grid; place-items: center; color: var(--navy); }
+.cb-peg .cb-sym { width: 70%; height: 70%; display: block; }
+.cb-code { margin-bottom: calc(var(--peg) * .25); }
+.cb-hid { background: var(--navy); color: var(--accent); font-weight: 900; font-size: calc(var(--peg) * .5); box-shadow: calc(var(--peg) * .05) calc(var(--peg) * .06) 0 var(--shadow); }
+.cb-shown { background: var(--accent-pale); box-shadow: calc(var(--peg) * .05) calc(var(--peg) * .06) 0 var(--shadow); }
+.cb-later .cb-peg { background: transparent; box-shadow: inset 0 0 0 2px var(--cream); }
+.cb-later .cb-num { opacity: .55; }
+.cb-now { background: var(--accent-pale); }
+.cb-now .cb-num { color: var(--navy); font-weight: 900; }
+.cb-now .cb-peg { background: var(--white); }
+.cb-empty { box-shadow: inset 0 0 0 2px var(--sand); }
+.cb-empty.cb-next { box-shadow: inset 0 0 0 3px var(--navy); }
+.cb-slot { cursor: pointer; }
+.cb-slot:active { transform: scale(.94); }
+.cb-win { background: var(--accent); }
+.cb-win .cb-peg { background: var(--white); }
+.cb-win .cb-num { color: var(--navy); font-weight: 900; }
+/* after the round: the best guess's number sits on gold, a guess that broke a clue has its number ringed (a guess can be both) */
+.cb-best .cb-num, .cb-gn { background: var(--accent); color: var(--navy); font-weight: 900; }
+.cb-broke .cb-num { color: var(--navy); font-weight: 900; box-shadow: inset 0 0 0 2px var(--navy); }
+.cb-gn-o { background: transparent; box-shadow: inset 0 0 0 2px var(--navy); }
+.cb-gn { display: inline-block; padding: 0 .55em; border-radius: 999px; line-height: 1.45; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* clue marks, each with its count: ● right symbol, right spot · ○ right symbol, wrong spot */
+.cb-clue { flex: none; width: calc(var(--peg) * 2.1); display: flex; align-items: center; gap: calc(var(--peg) * .26); font-size: calc(var(--peg) * .5); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.cb-mk { display: inline-flex; align-items: center; gap: .16em; }
+.cb-mk-i { width: .78em; height: .78em; display: block; flex: none; }
+.cb-mk.cb-zero { opacity: .4; }
+.cb-rest { flex: none; width: calc(var(--peg) * 2.6); color: var(--teal); font-weight: 700; font-size: calc(var(--peg) * .3); white-space: nowrap; }
+.cb-rest b { color: var(--navy); font-weight: 900; font-size: 1.45em; font-variant-numeric: tabular-nums; margin-right: .2em; }
+
+/* one-shot motion */
+.cb-pop { animation: cb-pop .22s cubic-bezier(.34, 1.56, .64, 1); }
+.cb-in .cb-clue { animation: cb-rise .32s ease both; }
+.cb-flip { animation: cb-flip .5s cubic-bezier(.3, .7, .4, 1) both; animation-delay: calc(var(--i) * 90ms); }
+.cb-shake .cb-pegs { animation: cb-shake .3s ease; }
+@keyframes cb-pop { from { transform: scale(.7); } to { transform: none; } }
+@keyframes cb-rise { from { opacity: 0; transform: translateX(-.4em); } to { opacity: 1; transform: none; } }
+@keyframes cb-flip { from { transform: perspective(30em) rotateY(90deg); } to { transform: none; } }
+@keyframes cb-shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+/* ---------- the side: codes left (Board), the key to the marks, hints or the debrief, the symbols ---------- */
+.cb-side { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: clamp(.6rem, 1.8vh, 1.1rem); }
+.cb-count { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: var(--accent-pale); border-radius: 16px; padding: clamp(.6rem, 1.6vh, 1rem) clamp(.9rem, 1.4vw, 1.4rem); }
+.cb-count-n { margin: 0; font-weight: 900; font-size: clamp(2.2rem, 9vh, 6rem); line-height: 1; font-variant-numeric: tabular-nums; }
+.cb-legend { flex: none; display: flex; flex-wrap: wrap; gap: .3rem 1.4rem; color: var(--teal); font-weight: 700; font-size: .85rem; }
+.cb-legend span { display: inline-flex; align-items: center; gap: .4rem; }
+.cb-legend svg { width: 1.05em; height: 1.05em; color: var(--navy); flex: none; }
+.cb-reveal { background: var(--cream); border-radius: 14px; padding: .75rem 1rem; display: flex; flex-direction: column; gap: .6rem; font-size: 1.05rem; font-weight: 500; min-width: 0; min-height: 0; overflow: auto; flex: 0 1 auto; }
+.cb-reveal:empty { display: none; }
+.cb-tip { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .7rem; }
+.cb-tip > .label { flex: none; width: 6.2rem; }
+.cb-tip-body { flex: 1; min-width: min(100%, 12rem); line-height: 1.45; }
+.cb-tip b { font-weight: 900; }
+.cb-nm { white-space: nowrap; }
+.cb-sym-in { width: 1.05em; height: 1.05em; display: inline-block; vertical-align: -.16em; margin-right: .22em; }
+.cb-try { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; margin-right: .5rem; }
+.cb-try .mini { background: var(--accent); }
+.cb-note { display: block; margin-top: .3rem; color: var(--teal); font-size: .92em; }
+.cb-chain { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .3rem .35rem; }
+.cb-step { background: var(--white); border-radius: 999px; padding: .12rem .7rem; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cb-arrow { color: var(--teal); font-weight: 700; }
+.cb-grow { flex: 1; min-height: 0; }
+
+.cb-keys { flex: none; display: grid; grid-template-columns: repeat(var(--syms), minmax(0, 1fr)); gap: clamp(.35rem, .9vw, .8rem); width: 100%; max-width: calc(var(--syms) * 5.6rem); align-self: center; padding: 0 6px 6px 0; }
+.cb-key { position: relative; aspect-ratio: 1; min-height: 2.6rem; border: 0; padding: 0; border-radius: 22%; background: var(--cream); box-shadow: 3px 4px 0 var(--shadow); display: grid; place-items: center; }
+.cb-key svg { width: 62%; height: 62%; display: block; }
+.cb-key i { position: absolute; top: 7%; left: 11%; font-style: normal; font-weight: 700; font-size: clamp(.62rem, 1.1vh, .8rem); color: var(--teal); }
+.cb-key:active { transform: translateY(2px) scale(.95); box-shadow: 1px 2px 0 var(--shadow); }
+@media (hover: none), (pointer: coarse) { .cb-key i { display: none; } }
+.cb-verdict { flex: none; margin: 0; text-align: center; font-weight: 900; font-size: clamp(1.5rem, 4.6vh, 2.8rem); line-height: 1.1; text-wrap: balance; }
+.cb-verdict span { display: block; margin-top: .45rem; color: var(--teal); font-weight: 700; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; }
+
+.cb-actions { flex: none; display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.cb-actions .cb-go { margin-left: auto; min-width: 9rem; padding: .8rem 2rem; font-size: 1.1rem; }
+.cb-m-board .cb-reveal { font-size: 1.2rem; }
+
+/* ---------- small pieces: a row of symbols (hints, setup, how to play) and the results card's rows ---------- */
+.cb-minis { display: inline-flex; gap: .25em; vertical-align: middle; }
+.cb-mini { width: 1.75em; height: 1.75em; border-radius: .42em; background: var(--cream); display: grid; place-items: center; flex: none; }
+.cb-mini .cb-sym { width: 70%; height: 70%; display: block; }
+.cb-tip .cb-mini { background: var(--white); }
+.cb-r-rows { display: flex; flex-direction: column; align-items: center; gap: .35rem; margin: .1rem 0 .2rem; }
+.cb-r-row { display: flex; align-items: center; gap: .5rem; }
+.cb-r-n { width: 1.2rem; text-align: right; color: var(--teal); font-weight: 700; font-size: .8rem; font-variant-numeric: tabular-nums; }
+.cb-r-marks { display: flex; gap: .35rem; padding: .32rem .5rem; border-radius: 10px; background: var(--cream); color: var(--navy); }
+.cb-r-win .cb-r-marks { background: var(--accent); }
+.cb-r-marks .cb-mk-i { width: 1.4rem; height: 1.4rem; }
+.cb-mk-none { opacity: .4; }
+
+/* ---------- setup and how to play ---------- */
+.cb-lv { display: flex; flex-direction: column; gap: .5rem; background: var(--cream); border-radius: 14px; padding: .75rem 1rem; }
+.cb-lv p { font-weight: 700; color: var(--teal); font-size: .92rem; }
+.cb-lv .cb-minis { font-size: 1.15rem; flex-wrap: wrap; }
+.cb-lv .cb-mini { background: var(--white); }
+.howto ol { margin: 0; padding-left: 1.3rem; display: flex; flex-direction: column; gap: .25rem; font-weight: 500; }
+.cb-howto-key { display: flex; flex-wrap: wrap; gap: .2rem 1.2rem; margin-top: .25rem; font-weight: 700; }
+.cb-howto-key span { display: inline-flex; align-items: center; gap: .4rem; }
+.cb-howto-key svg { width: 1.05em; height: 1.05em; flex: none; }
+.cb-howto-ex { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: .45rem .8rem; background: var(--cream); border-radius: 14px; padding: .75rem 1rem; }
+.cb-howto-ex .cb-mini { background: var(--white); }
+.cb-howto-ex .cb-clue { --peg: 2.5rem; width: auto; }
+.cb-howto-keys { font-size: .85rem; font-weight: 500; color: var(--teal); }
+.cb-howto-keys b { color: var(--navy); }
+@media (hover: none), (pointer: coarse) { .cb-howto-keys { display: none; } }
+
+/* ---------- front page: the art, and a title that fits a phone ---------- */
+.home-card:has(.cb-art) .home-title { font-size: min(clamp(2.4rem, 7.5vh, 4.4rem), 12.5vw); }
+.cb-art { display: flex; gap: clamp(.4rem, 1.2vw, .7rem); }
+.cb-art-peg { width: clamp(2.8rem, 8.5vh, 4rem); aspect-ratio: 1; border-radius: 12px; background: var(--cream); display: grid; place-items: center; box-shadow: 3px 4px 0 var(--shadow); }
+.cb-art-peg .cb-sym { width: 66%; height: 66%; display: block; }
+.cb-art-hid { background: var(--navy); color: var(--accent); font-weight: 900; font-size: clamp(1.4rem, 4.2vh, 2.1rem); }
+
+/* ---------- portrait screens and phones: one column, the board on top. The board gives way to hints down to
+   a floor, and once a round is over its empty rows go, so the debrief has room. ---------- */
+@media (max-width: 760px), (max-aspect-ratio: 1/1) {
+  .cb.cb-over { --ph: var(--ph-done); }
+  .cb-over .cb-later { display: none; }
+  .cb-over .cb-verdict { order: -1; }
+  .cb-main, .cb-m-board .cb-main { display: flex; flex-direction: column; gap: clamp(.55rem, 1.6vh, 1rem); }
+  .cb-field { flex: 1000 1 0; min-height: min(30vh, calc(100cqw * var(--ph) / var(--pw))); max-height: calc(100cqw * var(--ph) / var(--pw)); }
+  .cb-verdict { font-size: 1.6rem; }
+  .cb-side { flex: 1 1 auto; gap: clamp(.5rem, 1.4vh, .9rem); }
+  .cb-reveal { font-size: 1rem; padding: .6rem .8rem; }
+  .cb-tip > .label { width: 100%; }
+  .cb-count { padding: .4rem .9rem; }
+  .cb-count-n { font-size: 2.2rem; }
+  .cb-legend { font-size: .78rem; gap: .2rem 1rem; justify-content: center; }
+  .cb-actions .btn { padding-inline: 1.1rem; }
+  .cb-actions .cb-go { min-width: 0; padding-inline: 1.7rem; font-size: 1.05rem; }
+}
+
 </style>
 </head>
 <body>
@@ -1329,6 +1479,783 @@ function customPuzzle(strs) {
       '<p class="howto-keys">Keys: <b>1</b>–<b>4</b> numbers · <b>+ ' + MINUS + ' * /</b> · <b>U</b> undo · <b>R</b> start over · <b>H</b> hint · <b>N</b> next</p>',
     dailyDone: date => !!Lab.store.get(ID + '.daily.' + date, null),
     daily: dailyPuzzles,
+    mount
+  });
+})();
+
+})();
+
+(function () {
+'use strict';
+/* ===== Codebreaker: codes, clues, the codes that still fit, hints and the debrief (no DOM) =====
+   A code is an array of symbol numbers: 0 circle, 1 square, 2 triangle, 3 diamond, 4 star, 5 hexagon, 6 cross.
+   A clue is [right, wrong]: how many are the right symbol in the right spot (●), and how many more are in
+   the code but in a different spot (○). Repeats count the way the board game counts them: a symbol scores
+   at most as many times as it appears in both the code and the guess. */
+const SYMBOLS = ['circle', 'square', 'triangle', 'diamond', 'star', 'hexagon', 'cross'];
+const PLURALS = ['circles', 'squares', 'triangles', 'diamonds', 'stars', 'hexagons', 'crosses'];
+const LEVELS = {
+  easy: { id: 'easy', name: 'Easy', len: 4, syms: 5, repeats: false, guesses: 8 },
+  medium: { id: 'medium', name: 'Medium', len: 4, syms: 6, repeats: true, guesses: 8 },
+  hard: { id: 'hard', name: 'Hard', len: 5, syms: 7, repeats: true, guesses: 10 }
+};
+const LEVEL_IDS = ['easy', 'medium', 'hard'];
+
+/* ---- every code at a level, listed once, in order (cached: callers never change these arrays) ---- */
+const codeLists = {};
+function allCodes(levelId) {
+  if (codeLists[levelId]) return codeLists[levelId];
+  const L = LEVELS[levelId], out = [], cur = [];
+  (function rec() {
+    if (cur.length === L.len) { out.push(cur.slice()); return; }
+    for (let s = 0; s < L.syms; s++) {
+      if (!L.repeats && cur.indexOf(s) >= 0) continue;
+      cur.push(s); rec(); cur.pop();
+    }
+  })();
+  return (codeLists[levelId] = out);
+}
+function randomCode(levelId, rnd) {
+  const L = LEVELS[levelId], pool = [], out = [];
+  for (let s = 0; s < L.syms; s++) pool.push(s);
+  for (let p = 0; p < L.len; p++) out.push(L.repeats ? Math.floor(rnd() * L.syms) : pool.splice(Math.floor(rnd() * pool.length), 1)[0]);
+  return out;
+}
+const sameCode = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+const codeKey = c => c.join('');
+
+/* ---- scoring: the same either way round, so "could X be the code?" is score(X, guess) === clue ---- */
+const tallyA = new Int32Array(8), tallyB = new Int32Array(8);
+function clueKey(code, guess) {
+  let right = 0, common = 0;
+  tallyA.fill(0); tallyB.fill(0);
+  for (let i = 0; i < code.length; i++) {
+    const a = code[i], b = guess[i];
+    if (a === b) right++;
+    tallyA[a]++; tallyB[b]++;
+  }
+  for (let s = 0; s < 8; s++) common += tallyA[s] < tallyB[s] ? tallyA[s] : tallyB[s];
+  return right * 16 + common - right;
+}
+const keyOf = clue => clue[0] * 16 + clue[1];
+function score(code, guess) { const k = clueKey(code, guess); return [k >> 4, k & 15]; }
+
+/* history: [{ guess, clue }] in the order played */
+function filterCodes(codes, guess, clue) {
+  const want = keyOf(clue);
+  return codes.filter(c => clueKey(c, guess) === want);
+}
+function fitsAll(code, history) { return history.every(h => clueKey(code, h.guess) === keyOf(h.clue)); }
+function stillFit(levelId, history) {
+  let codes = allCodes(levelId);
+  for (const h of history) codes = filterCodes(codes, h.guess, h.clue);
+  return codes;
+}
+
+/* ---- facts the clues prove: each is true of every code that still fits ----
+   spot: a sym in spot · two: at least two syms · one: exactly one sym · some: at least one sym
+   none: no sym in the code · notspot: no sym in spot */
+const KIND_RANK = { spot: 0, two: 1, one: 2, none: 3, some: 4, notspot: 5 };
+const factKey = f => f.kind + ':' + f.sym + (f.spot === undefined ? '' : ':' + f.spot);
+function holds(f, code) {
+  if (f.kind === 'spot') return code[f.spot] === f.sym;
+  if (f.kind === 'notspot') return code[f.spot] !== f.sym;
+  let n = 0;
+  for (let i = 0; i < code.length; i++) if (code[i] === f.sym) n++;
+  return f.kind === 'none' ? n === 0 : f.kind === 'some' ? n >= 1 : f.kind === 'one' ? n === 1 : n >= 2;
+}
+function provenFacts(codes, levelId) {
+  const L = LEVELS[levelId], n = codes.length, out = [];
+  if (!n) return out;
+  const lo = new Array(L.syms).fill(99), hi = new Array(L.syms).fill(0), at = new Array(L.len * L.syms).fill(0), tally = new Array(L.syms);
+  for (const c of codes) {
+    tally.fill(0);
+    for (let p = 0; p < L.len; p++) { tally[c[p]]++; at[p * L.syms + c[p]]++; }
+    for (let s = 0; s < L.syms; s++) { if (tally[s] < lo[s]) lo[s] = tally[s]; if (tally[s] > hi[s]) hi[s] = tally[s]; }
+  }
+  for (let s = 0; s < L.syms; s++) {
+    if (hi[s] === 0) { out.push({ kind: 'none', sym: s }); continue; }
+    if (lo[s] >= 2) out.push({ kind: 'two', sym: s });
+    else if (lo[s] === 1 && hi[s] === 1 && L.repeats) out.push({ kind: 'one', sym: s });
+    else if (lo[s] >= 1) out.push({ kind: 'some', sym: s });
+    for (let p = 0; p < L.len; p++) {
+      const k = at[p * L.syms + s];
+      if (k === n) out.push({ kind: 'spot', sym: s, spot: p });
+      else if (k === 0) out.push({ kind: 'notspot', sym: s, spot: p });
+    }
+  }
+  return out;
+}
+/* How much a fact says: the share of all codes at the level it rules out (the same for every symbol and spot). */
+const strengths = {};
+function strengthOf(f, levelId) {
+  const k = levelId + ':' + f.kind;
+  if (strengths[k] === undefined) {
+    const all = allCodes(levelId), probe = { kind: f.kind, sym: 0, spot: 0 };
+    strengths[k] = all.filter(c => !holds(probe, c)).length / all.length;
+  }
+  return strengths[k];
+}
+/* A fact in plain words. name(sym, plural) can dress the symbol's name (the game puts its shape beside it). */
+function factText(f, levelId, name) {
+  name = name || ((s, many) => (many ? PLURALS : SYMBOLS)[s]);
+  if (f.kind === 'spot') return 'There’s a ' + name(f.sym) + ' in spot ' + (f.spot + 1) + '.';
+  if (f.kind === 'notspot') return 'The ' + name(f.sym) + ' isn’t in spot ' + (f.spot + 1) + '.';
+  if (f.kind === 'none') return 'The ' + name(f.sym) + ' isn’t in the code.';
+  if (f.kind === 'two') return 'There are at least two ' + name(f.sym, true) + '.';
+  if (f.kind === 'one') return 'There’s exactly one ' + name(f.sym) + '.';
+  return LEVELS[levelId].repeats ? 'There’s at least one ' + name(f.sym) + '.' : 'There’s a ' + name(f.sym) + ' in the code.';
+}
+/* The hint's fact: the strongest one not already shown and not following from what was shown.
+   Ties go to a fact that takes two or more clues together to see, the kind a student is likeliest to miss. */
+const directMemo = new Map();
+function directFacts(levelId, h) {
+  const k = levelId + '|' + codeKey(h.guess) + '|' + keyOf(h.clue);
+  if (!directMemo.has(k)) {
+    if (directMemo.size > 500) directMemo.clear();
+    directMemo.set(k, new Set(provenFacts(filterCodes(allCodes(levelId), h.guess, h.clue), levelId).map(factKey)));
+  }
+  return directMemo.get(k);
+}
+function pickFact(codes, levelId, history, shown) {
+  shown = shown || [];
+  const all = allCodes(levelId);
+  const shownKeys = new Set(shown.map(factKey));
+  const known = shown.length ? all.filter(c => shown.every(f => holds(f, c))) : all;
+  const direct = new Set();
+  for (const h of history) directFacts(levelId, h).forEach(k => direct.add(k));
+  const cands = provenFacts(codes, levelId).filter(f => !shownKeys.has(factKey(f)) && !known.every(c => holds(f, c)));
+  cands.sort((a, b) => (strengthOf(b, levelId) - strengthOf(a, levelId)) ||
+    (direct.has(factKey(a)) - direct.has(factKey(b))) ||
+    (KIND_RANK[a.kind] - KIND_RANK[b.kind]) || ((a.spot || 0) - (b.spot || 0)) || (a.sym - b.sym));
+  return cands[0] || null;
+}
+
+/* ---- a strong next guess: of the codes that still fit, the one whose worst clue leaves the fewest ----
+   It is always a code that could still be the answer, so it never breaks a clue (the debrief's warning).
+   Ties go to the smaller average leftover, then to the first in order. Before any guess every code fits and
+   only the pattern of a guess matters (two pairs, a triple, ...), so one guess per pattern is tried. Past
+   BUDGET score checks (only on Hard, after a guess that rules out little), an even spread of the codes that
+   fit stands in for all of them, so a hint never keeps a Chromebook waiting (about 25 ms on a desktop at worst). */
+const BUDGET = 600000;
+function firstOfPattern(c) {
+  let top = -1;
+  for (let i = 0; i < c.length; i++) { if (c[i] > top + 1) return false; if (c[i] > top) top = c[i]; }
+  return true;
+}
+const openers = {};
+function strongGuess(codes, levelId, history) {
+  const fresh = !history || !history.length;
+  if (fresh && codes === allCodes(levelId)) {
+    if (!openers[levelId]) openers[levelId] = searchGuess(codes, levelId, true);
+    return { code: openers[levelId].code.slice(), worst: openers[levelId].worst };
+  }
+  return searchGuess(codes, levelId, fresh);
+}
+function searchGuess(codes, levelId, fresh) {
+  const L = LEVELS[levelId], m = codes.length, len = L.len, syms = L.syms;
+  if (!m) return null;
+  if (m === 1) return { code: codes[0].slice(), worst: 1 };
+  const D = new Uint8Array(m * len), C = new Uint8Array(m * syms);
+  for (let j = 0; j < m; j++) {
+    const c = codes[j];
+    for (let p = 0; p < len; p++) { D[j * len + p] = c[p]; C[j * syms + c[p]]++; }
+  }
+  let cand = [];
+  if (fresh && m === allCodes(levelId).length) { for (let j = 0; j < m; j++) if (firstOfPattern(codes[j])) cand.push(j); }
+  if (!cand.length) {
+    const k = Math.min(m, Math.max(1, Math.floor(BUDGET / m)));
+    for (let i = 0; i < k; i++) cand.push(Math.floor(i * m / k));
+  }
+  const hist = new Int32Array(64), g = new Uint8Array(len), gc = new Uint8Array(syms), gs = new Uint8Array(len);
+  let best = -1, bestWorst = Infinity, bestSq = Infinity;
+  for (const i of cand) {
+    gc.fill(0);
+    let nd = 0;
+    for (let p = 0; p < len; p++) { const s = D[i * len + p]; g[p] = s; if (gc[s]++ === 0) gs[nd++] = s; }
+    hist.fill(0);
+    let worst = 0, cut = false;
+    for (let j = 0, o = 0, oc = 0; j < m; j++, o += len, oc += syms) {
+      let r = 0, t = 0;
+      for (let p = 0; p < len; p++) if (D[o + p] === g[p]) r++;
+      for (let q = 0; q < nd; q++) { const s = gs[q], x = C[oc + s], y = gc[s]; t += x < y ? x : y; }
+      const v = ++hist[r * 8 + t - r];
+      if (v > worst) { worst = v; if (worst > bestWorst) { cut = true; break; } }
+    }
+    if (cut) continue;
+    let sq = 0;
+    for (let k = 0; k < 64; k++) sq += hist[k] * hist[k];
+    if (worst < bestWorst || (worst === bestWorst && sq < bestSq)) { best = i; bestWorst = worst; bestSq = sq; }
+  }
+  return { code: codes[best].slice(), worst: bestWorst };
+}
+
+/* ---- the Daily: one Medium code a day, never one used in the 30 days before ----
+   A day's code is the first draw from that day's seed that is not among the previous 30 days' codes, which makes
+   the codes a walk from a fixed first day. rngFor(iso) gives that day's seeded random numbers (Lab.dailyRng in the
+   game). memo, an array kept between calls, saves walking from the first day every time. */
+const DAILY_FROM = '2026-11-01', DAILY_GAP = 30, DAILY_SPAN = 7300;
+const dayNumber = iso => { const p = iso.split('-').map(Number); return Math.round(Date.UTC(p[0], p[1] - 1, p[2]) / 864e5); };
+function isoOfDay(n) {
+  const d = new Date(n * 864e5), two = x => String(x).padStart(2, '0');
+  return d.getUTCFullYear() + '-' + two(d.getUTCMonth() + 1) + '-' + two(d.getUTCDate());
+}
+function dailyCode(date, rngFor, memo) {
+  const first = dayNumber(DAILY_FROM), n = dayNumber(date);
+  /* a clock set before the Daily began, or decades ahead: that day's own draw, still the same on every device */
+  if (!(n >= first) || n - first > DAILY_SPAN) return randomCode('medium', rngFor(date));
+  const days = memo || [];
+  while (days.length <= n - first) {
+    const i = days.length, recent = new Set(days.slice(Math.max(0, i - DAILY_GAP)).map(codeKey));
+    const rnd = rngFor(isoOfDay(first + i));
+    let c = randomCode('medium', rnd);
+    while (recent.has(codeKey(c))) c = randomCode('medium', rnd);
+    days.push(c);
+  }
+  return days[n - first].slice();
+}
+
+/* ---- the debrief: codes left after each guess, the guess that cut the biggest share, guesses that broke a clue ---- */
+function debrief(levelId, history, solved) {
+  let codes = allCodes(levelId);
+  const total = codes.length, rows = [];
+  history.forEach((h, k) => {
+    let broke = -1;
+    for (let j = 0; j < k && broke < 0; j++) if (clueKey(h.guess, history[j].guess) !== keyOf(history[j].clue)) broke = j;
+    const before = codes.length;
+    codes = filterCodes(codes, h.guess, h.clue);
+    rows.push({ before, left: codes.length, broke });
+  });
+  /* the winning guess is left out: cracking the code always "rules out" the rest */
+  let best = -1, share = 0;
+  rows.forEach((r, k) => {
+    if (solved && k === rows.length - 1) return;
+    const s = (r.before - r.left) / r.before;
+    if (s > share) { share = s; best = k; }
+  });
+  return { total, rows, best };
+}
+
+/* ===== Codebreaker: the Game Lab edition =====
+   Play, Daily and Board on engine.js. The computer hides a row of symbols; after each guess the clue counts
+   ● the right symbol in the right spot and ○ the right symbol in a different spot. */
+(function () {
+  'use strict';
+  const ID = 'codebreaker';
+  const num = n => Number(n).toLocaleString('en-US');
+  const NAMES = SYMBOLS.map(s => s[0].toUpperCase() + s.slice(1));
+  /* Each symbol is its own shape and its own color. The shape alone tells them apart; there is no coral. */
+  const FILLS = ['#2F7FE0', '#17324D', '#2A9D5C', '#8A5BD6', '#F2B640', '#19ADA0', '#A26B3B'];
+  const EDGES = ['#2F7FE0', '#17324D', '#2A9D5C', '#8A5BD6', '#D99A1E', '#19ADA0', '#A26B3B'];
+  const SHAPES = [
+    '<circle cx="50" cy="50" r="41"/>',
+    '<rect x="14" y="14" width="72" height="72" rx="7"/>',
+    '<path d="M50 9 94 86H6z"/>',
+    '<path d="M50 4 90 50 50 96 10 50z"/>',
+    '<path d="M50 7 62 37.4 94.7 39.5 69.5 60.3 77.6 92 50 74.5 22.4 92 30.5 60.3 5.3 39.5 38 37.4z"/>',
+    '<path d="M50 7 87.2 28.5 87.2 71.5 50 93 12.8 71.5 12.8 28.5z"/>',
+    '<path d="M37 8h26v29h29v26H63v29H37V63H8V37h29z"/>'
+  ];
+  function symSVG(s, cls) {
+    return '<svg class="' + (cls || 'cb-sym') + '" viewBox="0 0 100 100" aria-hidden="true"><g fill="' + FILLS[s] + '" stroke="' + EDGES[s] +
+      '" stroke-width="5" stroke-linejoin="round">' + SHAPES[s] + '</g></svg>';
+  }
+  /* clue marks: a filled dot and a ring, each with its count, so the marks differ by shape as well as by fill */
+  const MARK_RIGHT = '<svg class="cb-mk-i" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="currentColor"/></svg>';
+  const MARK_WRONG = '<svg class="cb-mk-i" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor" stroke-width="2.6"/></svg>';
+  const MARK_NONE = '<svg class="cb-mk-i cb-mk-none" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="2.6" fill="currentColor"/></svg>';
+  const clueWords = c => c[0] + ' right symbol' + (c[0] === 1 ? '' : 's') + ' in the right spot, ' + c[1] + ' in a wrong spot';
+  const clueHTML = c => '<span class="cb-clue" role="img" aria-label="' + clueWords(c) + '">' +
+    '<span class="cb-mk' + (c[0] ? '' : ' cb-zero') + '">' + MARK_RIGHT + '<b>' + c[0] + '</b></span>' +
+    '<span class="cb-mk' + (c[1] ? '' : ' cb-zero') + '">' + MARK_WRONG + '<b>' + c[1] + '</b></span></span>';
+  const codeWords = code => code.map(s => SYMBOLS[s]).join(', ');
+  const miniRow = code => '<span class="cb-minis">' + code.map(s => '<span class="cb-mini">' + symSVG(s) + '</span>').join('') + '</span>';
+  /* a symbol's name in a sentence, with its shape beside it */
+  const nameHTML = (s, many) => '<b class="cb-nm">' + symSVG(s, 'cb-sym-in') + (many ? PLURALS : SYMBOLS)[s] + '</b>';
+  const repeatsText = L => L.repeats ? 'Repeats allowed' : 'No repeats';
+  const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+
+  /* The Daily: one Medium code for everyone that day (engine.js dailyCode). */
+  const dailyMemo = [];
+  const dailyFor = date => dailyCode(date, iso => Lab.dailyRng(ID, iso), dailyMemo);
+
+  /* ---------- one session of a mode ---------- */
+  function mount(mode, host, ctx) {
+    const saved = Lab.store.get(ID + '.settings', {}) || {};
+    const isLevel = l => LEVEL_IDS.indexOf(l) >= 0;
+    const board = mode === 'board';
+    const S = {
+      level: isLevel(saved.level) ? saved.level : 'easy',
+      bLevel: isLevel(saved.bLevel) ? saved.bLevel : 'medium',
+      L: null, secret: [], history: [], entry: [], codes: [], counts: [],
+      rung: 0, hints: 0, facts: [], tips: [],
+      over: false, solved: false, outcome: null,
+      count: 0, solvedCount: 0, streak: 0, best: +Lab.store.get(ID + '.best', 0) || 0,
+      daily: null
+    };
+    /* one-shot motion: the symbol just placed, the row just scored, the code turning over, a row that isn't full */
+    const fx = { fresh: -1, scored: -1, flip: false, nudge: false };
+    /* Board always shows how many codes are left, so its ladder starts at the fact */
+    const ladder = board ? ['fact', 'guess'] : ['count', 'fact', 'guess'];
+    let tick = 0;
+    const q = sel => host.querySelector(sel);
+    const saveSettings = () => Lab.store.set(ID + '.settings', { level: S.level, bLevel: S.bLevel });
+    const blankRow = () => new Array(S.L.len).fill(null);
+    const full = () => S.entry.indexOf(null) < 0;
+
+    host.classList.add('cb-host');
+    host.innerHTML =
+      '<div class="cb cb-m-' + mode + '">' +
+        '<section class="card cb-stage" aria-label="Codebreaker" tabindex="-1">' +
+          '<div class="cb-top"><p class="label cb-meta"></p></div>' +
+          '<div class="cb-main">' +
+            '<div class="cb-field"><div class="cb-board"></div></div>' +
+            '<div class="cb-side">' +
+              (board ? '<div class="cb-count"><p class="label">Codes left</p><p class="cb-count-n"></p></div>' : '') +
+              '<div class="cb-legend" aria-hidden="true"><span>' + MARK_RIGHT + 'Right symbol, right spot</span><span>' + MARK_WRONG + 'Right symbol, wrong spot</span></div>' +
+              '<div class="cb-reveal" aria-live="polite"></div>' +
+              '<div class="cb-grow"></div>' +
+              '<div class="cb-keys" role="group" aria-label="Symbols"></div>' +
+              '<p class="cb-verdict" hidden></p>' +
+            '</div>' +
+          '</div>' +
+          '<div class="cb-actions"></div>' +
+          '<p class="cb-sr" aria-live="polite"></p>' +
+        '</section>' +
+      '</div>';
+    const root = q('.cb'), stage = q('.cb-stage');
+
+    /* ---------- dealing ---------- */
+    function deal() {
+      const levelId = mode === 'daily' ? 'medium' : board ? S.bLevel : S.level;
+      S.L = LEVELS[levelId];
+      S.secret = mode === 'daily' ? S.daily.code.slice() : randomCode(levelId, Math.random);
+      S.history = []; S.entry = blankRow(); S.codes = allCodes(levelId); S.counts = [S.codes.length];
+      S.rung = 0; S.hints = 0; S.facts = []; S.tips = [];
+      S.over = false; S.solved = false; S.outcome = null; S.count++;
+      fx.fresh = -1; fx.scored = -1; fx.flip = false;
+      sizeBoard(); renderKeys(); renderAll();
+    }
+    /* The board's size in peg widths and heights, for game.css to fit the pegs to the space (it matches the rows' CSS).
+       --ph-done is the height of just the code and the guesses made: phones drop the empty rows once a round is over. */
+    const rowsHigh = rows => (rows * 1.2 + 0.35).toFixed(2);
+    function sizeBoard() {
+      const L = S.L;
+      const pw = 0.5 + 0.7 + 0.35 + L.len + (L.len - 1) * 0.14 + 0.35 + 2.1 + (board ? 0.35 + 2.6 : 0) + 0.1;
+      root.style.setProperty('--pw', pw.toFixed(2));
+      root.style.setProperty('--ph-all', rowsHigh(L.guesses + 1));
+    }
+
+    /* ---------- entering a guess ---------- */
+    function place(s) {
+      if (S.over || s < 0 || s >= S.L.syms) return;
+      const i = S.entry.indexOf(null);
+      if (i < 0) { fx.nudge = true; renderBoard(); return; }
+      S.entry[i] = s; fx.fresh = i;
+      renderBoard(); syncCheck();
+    }
+    function clearSpot(i) {
+      if (S.over || S.entry[i] === null || S.entry[i] === undefined) return;
+      S.entry[i] = null;
+      renderBoard(); syncCheck();
+    }
+    /* Backspace takes back the spot that has focus, or else the last one filled. */
+    function backspace() {
+      if (S.over) return;
+      const a = document.activeElement;
+      if (a && a.classList.contains('cb-slot') && host.contains(a)) return clearSpot(+a.dataset.spot);
+      for (let i = S.entry.length - 1; i >= 0; i--) if (S.entry[i] !== null) { S.entry[i] = null; renderBoard(); syncCheck(); return; }
+    }
+    function useGuess(code) {
+      if (S.over || !code) return;
+      S.entry = code.slice(); fx.fresh = -1;
+      renderBoard(); syncCheck();
+    }
+    function check() {
+      if (S.over) return;
+      if (!full()) { fx.nudge = true; renderBoard(); return; }
+      const guess = S.entry.slice(), clue = score(S.secret, guess);
+      S.history.push({ guess, clue });
+      S.codes = filterCodes(S.codes, guess, clue);
+      S.counts.push(S.codes.length);
+      S.entry = blankRow(); S.rung = 0; S.tips = [];
+      fx.scored = S.history.length - 1; fx.fresh = -1;
+      say('Guess ' + S.history.length + ': ' + clueWords(clue) + '.');
+      if (clue[0] === S.L.len) { S.solved = true; Lab.sound.play('solve'); endRound(S.hints ? 'helped' : 'clean'); }
+      else if (S.history.length >= S.L.guesses) endRound('shown');
+      else { Lab.sound.play('step'); saveRun(); }
+      renderAll();
+    }
+
+    /* ---------- the end of a round: cracked, out of guesses, or shown ---------- */
+    function endRound(outcome) {
+      S.over = true; S.tips = []; fx.flip = true;
+      settle(outcome);
+      const v = verdict();
+      say(v[0] + (v[1] ? ', ' + v[1].toLowerCase() : '') + '. The code was ' + codeWords(S.secret) + '.');
+    }
+    /* A round's outcome is decided once. */
+    function settle(outcome) {
+      if (S.outcome) return;
+      S.outcome = outcome;
+      if (mode === 'play') {
+        if (outcome === 'shown') S.streak = 0;
+        else {
+          S.solvedCount++; S.streak++;
+          if (S.streak > S.best) { S.best = S.streak; Lab.store.set(ID + '.best', S.best); }
+        }
+      }
+      if (mode === 'daily') finishDaily();
+    }
+    function show() {
+      if (S.over) return;
+      endRound('shown');
+      renderAll();
+    }
+    /* On the day's Daily, Show me ends the Daily for good, so it asks first. */
+    function askShow() {
+      if (S.over) return;
+      if (mode !== 'daily' || S.daily.replay) return show();
+      const sh = Lab.sheet('<h2>Show the code?</h2><p>That ends today’s Daily, and it counts as shown.</p>',
+        { label: 'Show the code', done: 'Keep playing', extra: '<button class="btn" type="button" data-show>Show the code</button>' });
+      sh.el.querySelector('[data-show]').addEventListener('click', () => { sh.close(true); show(); });
+    }
+    function next() {
+      if (!S.over) return;
+      if (mode === 'daily') return showResults(S.daily.result, S.daily.replay);
+      deal();
+    }
+
+    /* ---------- hints: how many codes fit, then a fact the clues prove, then a strong guess ---------- */
+    function hint() {
+      if (S.over || S.rung >= ladder.length) return;
+      const kind = ladder[S.rung++];
+      S.hints++;
+      const tip = { kind };
+      if (kind === 'fact' && S.history.length) {
+        tip.fact = pickFact(S.codes, S.L.id, S.history, S.facts);
+        if (tip.fact) S.facts.push(tip.fact);
+      }
+      if (kind === 'guess') tip.guess = strongGuess(S.codes, S.L.id, S.history);
+      S.tips.push(tip);
+      saveRun();
+      renderSide(); renderActions();
+    }
+    function tipHTML(t) {
+      const n = S.codes.length;
+      if (t.kind === 'count') {
+        if (!S.history.length) return 'Any of the <b>' + num(n) + '</b> codes could be the one.';
+        return n === 1 ? 'Only <b>1</b> code fits every clue.' : '<b>' + num(n) + '</b> codes still fit every clue.';
+      }
+      if (t.kind === 'fact') {
+        if (!S.history.length) return 'No clues yet, so any guess is a good start.';
+        return t.fact ? factText(t.fact, S.L.id, nameHTML) : 'Make your next guess fit every clue so far.';
+      }
+      const g = t.guess, lead = n === 1 ? 'It has to be' : S.history.length ? 'Try' : 'A strong start';
+      const note = n === 1 ? '' : g.worst === 1 ? 'Whatever the clue, you’ll know the code after it.' :
+        'Whatever the clue, no more than <b>' + num(g.worst) + '</b> codes will be left.';
+      return '<span class="cb-try">' + lead + miniRow(g.code) + '<button class="mini" type="button" data-act="use">Use it</button></span>' +
+        (note ? '<span class="cb-note">' + note + '</span>' : '');
+    }
+
+    /* ---------- rendering ---------- */
+    function renderMeta() {
+      const L = S.L, bits = [];
+      if (mode === 'daily') {
+        bits.push('Daily');
+        if (S.daily.replay) bits.push('Replay');
+        bits.push(L.name, repeatsText(L), Lab.clock((S.daily.end || Date.now()) - S.daily.start));
+      } else if (mode === 'play') bits.push(L.name, repeatsText(L), 'Solved ' + S.solvedCount, 'Streak ' + S.streak);
+      else bits.push('Code ' + S.count, L.name, repeatsText(L));
+      q('.cb-meta').textContent = bits.join(' · ');
+    }
+    function renderBoard() {
+      const L = S.L, a = document.activeElement;
+      const focusSpot = a && a.classList && a.classList.contains('cb-slot') && host.contains(a) ? +a.dataset.spot : -1;
+      const d = S.over && S.history.length ? debrief(L.id, S.history, S.solved) : null;
+      let h = '<div class="cb-rows">';
+      h += '<div class="cb-row cb-code"><span class="cb-num"></span>' +
+        '<span class="cb-pegs" role="img" aria-label="' + (S.over ? 'The code: ' + codeWords(S.secret) : 'The hidden code') + '">' +
+        S.secret.map((s, i) => S.over
+          ? '<span class="cb-peg cb-shown' + (fx.flip ? ' cb-flip' : '') + '" style="--i:' + i + '">' + symSVG(s) + '</span>'
+          : '<span class="cb-peg cb-hid">?</span>').join('') + '</span></div>';
+      for (let k = 0; k < L.guesses; k++) {
+        const g = S.history[k];
+        if (g) {
+          const cls = (k === fx.scored ? ' cb-in' : '') + (S.solved && k === S.history.length - 1 ? ' cb-win' : '') +
+            (d && d.best === k ? ' cb-best' : '') + (d && d.rows[k].broke >= 0 ? ' cb-broke' : '');
+          h += '<div class="cb-row cb-done' + cls + '"><span class="cb-num">' + (k + 1) + '</span>' +
+            '<span class="cb-pegs" role="img" aria-label="Guess ' + (k + 1) + ': ' + codeWords(g.guess) + '">' +
+            g.guess.map(s => '<span class="cb-peg">' + symSVG(s) + '</span>').join('') + '</span>' +
+            clueHTML(g.clue) + (board ? '<span class="cb-rest"><b>' + num(S.counts[k + 1]) + '</b> left</span>' : '') + '</div>';
+        } else if (k === S.history.length && !S.over) {
+          const nextSpot = S.entry.indexOf(null);
+          h += '<div class="cb-row cb-now' + (fx.nudge ? ' cb-shake' : '') + '"><span class="cb-num">' + (k + 1) + '</span><span class="cb-pegs">' +
+            S.entry.map((s, i) => s === null
+              ? '<span class="cb-peg cb-empty' + (i === nextSpot ? ' cb-next' : '') + '"></span>'
+              : '<button class="cb-peg cb-slot' + (i === fx.fresh ? ' cb-pop' : '') + '" type="button" data-spot="' + i + '" aria-label="Spot ' + (i + 1) + ', ' +
+                SYMBOLS[s] + '. Tap to take it back.">' + symSVG(s) + '</button>').join('') +
+            '</span></div>';
+        } else {
+          h += '<div class="cb-row cb-later"><span class="cb-num">' + (k + 1) + '</span><span class="cb-pegs">' +
+            blankRow().map(() => '<span class="cb-peg"></span>').join('') + '</span></div>';
+        }
+      }
+      q('.cb-board').innerHTML = h + '</div>';
+      root.classList.toggle('cb-over', S.over);
+      root.style.setProperty('--ph-done', rowsHigh(S.history.length + 1));
+      fx.fresh = -1; fx.scored = -1; fx.flip = false; fx.nudge = false;
+      if (focusSpot >= 0) {
+        const slots = host.querySelectorAll('.cb-slot');
+        const again = host.querySelector('.cb-slot[data-spot="' + focusSpot + '"]') || slots[slots.length - 1];
+        if (again) again.focus(); else stage.focus({ preventScroll: true });
+      }
+    }
+    function renderKeys() {
+      const box = q('.cb-keys');
+      if (box.children.length === S.L.syms) return;
+      box.style.setProperty('--syms', S.L.syms);
+      box.innerHTML = Array.from({ length: S.L.syms }, (_, s) => '<button class="cb-key" type="button" data-sym="' + s + '" aria-label="' + NAMES[s] + '">' +
+        symSVG(s) + '<i aria-hidden="true">' + (s + 1) + '</i></button>').join('');
+    }
+    function debriefHTML() {
+      if (!S.history.length) return '';
+      const d = debrief(S.L.id, S.history, S.solved);
+      const row = (tag, body) => '<div class="cb-tip"><span class="label">' + tag + '</span><span class="cb-tip-body">' + body + '</span></div>';
+      let h = row('Codes left', '<span class="cb-chain">' + [d.total].concat(d.rows.map(r => r.left)).map(n => '<span class="cb-step">' + num(n) + '</span>')
+        .join('<span class="cb-arrow" aria-hidden="true">→</span>') + '</span>');
+      if (d.best >= 0) {
+        const r = d.rows[d.best], out = r.before - r.left;
+        h += row('Best guess', '<span class="cb-gn">Guess ' + (d.best + 1) + '</span> ruled out <b>' + num(out) + ' of ' + num(r.before) + '</b> codes (' +
+          Math.floor(100 * out / r.before) + '%), the biggest share of any guess.');
+      }
+      const broke = d.rows.map((r, k) => ({ k, j: r.broke })).filter(x => x.j >= 0);
+      if (broke.length) h += row('Broke a clue', broke.map(x => '<span class="cb-gn cb-gn-o">Guess ' + (x.k + 1) + '</span> couldn’t have been the code. It didn’t fit the clue from guess ' + (x.j + 1) + '.').join('<br>'));
+      else if (S.history.length > 1) h += row('Clues', 'Every guess fit all the clues before it.');
+      return h;
+    }
+    /* [the big line, the small line under it] */
+    function verdict() {
+      const n = S.history.length;
+      if (S.solved) return ['Cracked in ' + plural(n, 'guess', 'guesses'), S.hints ? 'With ' + plural(S.hints, 'hint', 'hints') : 'No hints'];
+      return [n >= S.L.guesses ? 'Out of guesses' : 'Code shown', ''];
+    }
+    function renderSide() {
+      if (board) q('.cb-count-n').textContent = num(S.codes.length);
+      q('.cb-reveal').innerHTML = S.over ? debriefHTML()
+        : S.tips.map((t, i) => '<div class="cb-tip cb-hint"><span class="label">Hint ' + (i + 1) + '</span><span class="cb-tip-body">' + tipHTML(t) + '</span></div>').join('');
+      q('.cb-keys').hidden = S.over;
+      const v = q('.cb-verdict');
+      v.hidden = !S.over;
+      const w = S.over ? verdict() : ['', ''];
+      v.innerHTML = Lab.esc(w[0]) + (w[1] ? '<span>' + Lab.esc(w[1]) + '</span>' : '');
+    }
+    function renderActions() {
+      const a = document.activeElement, had = a && host.contains(a) && a.dataset ? a.dataset.act : null;
+      const btn = (act, label, cls, off) => '<button class="btn' + (cls ? ' ' + cls : '') + '" type="button" data-act="' + act + '"' + (off ? ' disabled' : '') + '>' + label + '</button>';
+      let h = '';
+      if (!S.over) {
+        h += btn('hint', 'Hint', '', S.rung >= ladder.length);
+        h += btn('show', 'Show me');
+        h += btn('check', 'Check', 'primary cb-go', !full());
+      } else h += btn('next', mode === 'daily' ? 'See results' : 'Next code', 'primary cb-go');
+      q('.cb-actions').innerHTML = h;
+      if (had) {
+        const again = q('.cb-actions [data-act="' + had + '"]:not(:disabled)');
+        if (again) again.focus(); else stage.focus({ preventScroll: true });
+      }
+    }
+    function syncCheck() { const c = q('[data-act="check"]'); if (c) c.disabled = !full(); }
+    function say(text) { q('.cb-sr').textContent = text; }
+    function renderAll() { renderMeta(); renderBoard(); renderSide(); renderActions(); }
+
+    /* ---------- Daily ---------- */
+    const doneKey = date => ID + '.daily.' + date;
+    const RUN = ID + '.run'; /* today's Daily in progress: leaving and coming back picks up where you were */
+    function startDaily(replay) {
+      S.daily = { date: ctx.date, code: dailyFor(ctx.date), replay: !!replay, start: Date.now(), end: 0, result: null };
+      deal();
+      if (!replay) resume();
+    }
+    function resume() {
+      const run = Lab.store.get(RUN, null);
+      if (!run || run.date !== S.daily.date || !Array.isArray(run.guesses)) return;
+      const ok = g => Array.isArray(g) && g.length === S.L.len && g.every(s => s === (s | 0) && s >= 0 && s < S.L.syms);
+      for (const guess of run.guesses.filter(ok).slice(0, S.L.guesses)) {
+        const clue = score(S.secret, guess);
+        S.history.push({ guess: guess.slice(), clue });
+        S.codes = filterCodes(S.codes, guess, clue);
+        S.counts.push(S.codes.length);
+        if (clue[0] === S.L.len) break;
+      }
+      S.hints = Math.max(0, run.hints | 0);
+      S.facts = Array.isArray(run.facts) ? run.facts.filter(f => f && typeof f.kind === 'string') : [];
+      S.daily.start = Date.now() - Math.max(0, +run.ms || 0);
+      const last = S.history[S.history.length - 1];
+      if (last && last.clue[0] === S.L.len) { S.solved = true; endRound(S.hints ? 'helped' : 'clean'); }
+      else if (S.history.length >= S.L.guesses) endRound('shown');
+      renderAll();
+    }
+    function saveRun() {
+      if (mode !== 'daily' || S.daily.replay || S.over) return;
+      Lab.store.set(RUN, { date: S.daily.date, guesses: S.history.map(h => h.guess), hints: S.hints, facts: S.facts, ms: Date.now() - S.daily.start });
+    }
+    function finishDaily() {
+      const d = S.daily;
+      d.end = Date.now();
+      d.result = { date: d.date, rows: S.history.map(h => h.clue), outcome: S.outcome, hints: S.hints, ms: d.end - d.start, len: S.L.len, limit: S.L.guesses };
+      if (d.replay) return;
+      /* the day's first finish stands: one made in another tab is never overwritten */
+      if (Lab.store.get(doneKey(d.date), null)) d.replay = true;
+      else Lab.store.set(doneKey(d.date), d.result);
+      Lab.store.set(RUN, null);
+    }
+    function markRow(c, len) {
+      let h = '';
+      for (let i = 0; i < len; i++) h += i < c[0] ? MARK_RIGHT : i < c[0] + c[1] ? MARK_WRONG : MARK_NONE;
+      return '<span class="cb-r-marks" role="img" aria-label="' + clueWords(c) + '">' + h + '</span>';
+    }
+    function showResults(result, replay) {
+      const rows = Array.isArray(result.rows) ? result.rows : [];
+      const len = result.len || LEVELS.medium.len, won = result.outcome !== 'shown', hints = result.hints || 0;
+      const body = '<div class="cb-r-rows">' + rows.map((c, i) => '<div class="cb-r-row' + (won && i === rows.length - 1 ? ' cb-r-win' : '') + '">' +
+        '<span class="cb-r-n">' + (i + 1) + '</span>' + markRow(c, len) + '</div>').join('') + '</div>';
+      const sh = Lab.results({
+        game: 'Codebreaker',
+        sub: 'Daily · ' + Lab.dateWords(result.date) + (replay ? ' · replay' : ''),
+        squares: [['clean', 'helped', 'shown'].indexOf(result.outcome) >= 0 ? result.outcome : 'shown'],
+        body,
+        stats: [[(won ? rows.length : 'X') + ' of ' + (result.limit || LEVELS.medium.guesses), 'Guesses'], [Lab.clock(result.ms || 0), 'Time'],
+          [String(hints), hints === 1 ? 'Hint' : 'Hints']]
+      }, { done: 'Done', onClose: ctx.home, extra: '<button class="btn" type="button" data-again>Play again</button>' });
+      sh.el.querySelector('[data-again]').addEventListener('click', () => { sh.close(true); startDaily(true); });
+    }
+
+    /* ---------- setup (Play and Board) ---------- */
+    function levelInfo(id) {
+      const L = LEVELS[id];
+      return miniRow(Array.from({ length: L.syms }, (_, s) => s)) +
+        '<p>' + L.len + ' spots · ' + repeatsText(L) + ' · ' + L.guesses + ' guesses · ' + num(allCodes(id).length) + ' possible codes</p>';
+    }
+    function openSetup() {
+      const pick = board ? S.bLevel : S.level;
+      let chosen = pick;
+      const chip = l => '<button class="chip" type="button" data-level="' + l + '" aria-pressed="' + (l === pick) + '">' + LEVELS[l].name + '</button>';
+      const sh = Lab.sheet('<h2>Setup</h2><p class="label">Level</p><div class="chips" role="group" aria-label="Level">' + LEVEL_IDS.map(chip).join('') + '</div>' +
+        '<div class="cb-lv">' + levelInfo(pick) + '</div>', {
+        label: 'Setup',
+        onClose() {
+          if (chosen === pick) return;
+          if (board) S.bLevel = chosen; else S.level = chosen;
+          saveSettings();
+          if (mode === 'play' && !S.over && S.history.length) S.streak = 0;
+          deal();
+        }
+      });
+      sh.el.addEventListener('click', e => {
+        const c = e.target.closest('.chip');
+        if (!c) return;
+        chosen = c.dataset.level;
+        sh.el.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x === c ? 'true' : 'false'));
+        sh.el.querySelector('.cb-lv').innerHTML = levelInfo(chosen);
+      });
+    }
+
+    /* ---------- input ---------- */
+    host.addEventListener('click', e => {
+      const key = e.target.closest('.cb-key');
+      if (key) return place(+key.dataset.sym);
+      const slot = e.target.closest('.cb-slot');
+      if (slot) return clearSpot(+slot.dataset.spot);
+      const a = e.target.closest('[data-act]');
+      if (!a || a.disabled) return;
+      const act = a.dataset.act;
+      if (act === 'check') check();
+      else if (act === 'hint') hint();
+      else if (act === 'show') askShow();
+      else if (act === 'next') next();
+      else if (act === 'use') { const t = S.tips.find(x => x.kind === 'guess'); if (t) useGuess(t.guess.code); }
+    });
+    /* Enter checks the guess (or goes on, once a round is over). A button reached with Tab answers Enter itself;
+       a button that was tapped or clicked doesn't keep Enter from checking. Typing a symbol takes focus off any button. */
+    let keyNav = false;
+    const onPointer = () => { keyNav = false; };
+    function typing() {
+      const a = document.activeElement;
+      if (a && a !== stage && a.tagName === 'BUTTON') stage.focus({ preventScroll: true });
+    }
+    function onKey(e) {
+      if (e.key === 'Tab') { keyNav = true; return; }
+      if (Lab.sheetOpen() || e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+      const k = e.key.toLowerCase();
+      if (k.length === 1 && k >= '1' && k <= '9') { if (+k > S.L.syms || S.over) return; typing(); place(+k - 1); }
+      else if (k === 'backspace' || k === 'delete') {
+        if (S.over) return;
+        if (!(document.activeElement && document.activeElement.classList.contains('cb-slot'))) typing();
+        backspace();
+      }
+      else if (k === 'enter') {
+        if (keyNav && e.target.closest && e.target.closest('button')) return;
+        if (S.over) next(); else check();
+      }
+      else if (k === 'h') hint();
+      else if (k === 'n') { if (!S.over) return; next(); }
+      else return;
+      e.preventDefault();
+    }
+    function onHide() { if (document.visibilityState === 'hidden') saveRun(); }
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointer, true);
+    if (mode === 'daily') {
+      document.addEventListener('visibilitychange', onHide);
+      tick = setInterval(() => { if (S.daily && !S.over && !Lab.sheetOpen()) renderMeta(); }, 1000);
+    }
+    if (mode !== 'daily') ctx.setDock([{ label: 'Setup', onClick: openSetup }]);
+
+    /* ---------- go ---------- */
+    if (mode === 'daily') {
+      const done = Lab.store.get(doneKey(ctx.date), null);
+      startDaily(!!done);
+      if (done && Array.isArray(done.rows)) showResults(done, false);
+    } else deal();
+
+    return {
+      unmount() {
+        saveRun();
+        document.removeEventListener('keydown', onKey);
+        document.removeEventListener('pointerdown', onPointer, true);
+        document.removeEventListener('visibilitychange', onHide);
+        clearInterval(tick);
+      },
+      state: S /* for the tests */
+    };
+  }
+
+  const peg = s => '<span class="cb-art-peg">' + symSVG(s) + '</span>';
+  Lab.register({
+    id: ID,
+    name: 'Codebreaker',
+    modes: ['play', 'daily', 'board'],
+    accent: ['#F2B640', '#FCEFD0'],
+    icon: '<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="7" fill="#17324D"/><rect x="34" y="2" width="28" height="28" rx="7" fill="#17324D"/>' +
+      '<rect x="2" y="34" width="28" height="28" rx="7" fill="#17324D"/><rect x="34" y="34" width="28" height="28" rx="7" fill="#F2B640"/>' +
+      '<g stroke-linejoin="round" stroke-width="2"><circle cx="16" cy="16" r="7" fill="#fff"/><path d="M48 8.5 56 22.5H40z" fill="#fff" stroke="#fff"/>' +
+      '<path d="M16 39.5 23.5 48 16 56.5 8.5 48z" fill="#fff" stroke="#fff"/>' +
+      '<path d="M48 39 50.3 44.8 56.6 45.2 51.7 49.2 53.3 55.3 48 51.9 42.7 55.3 44.3 49.2 39.4 45.2 45.7 44.8z" fill="#17324D" stroke="#17324D"/></g></svg>',
+    art: '<div class="cb-art" aria-hidden="true">' + [0, 2, 4].map(peg).join('') + '<span class="cb-art-peg cb-art-hid">?</span></div>',
+    howTo: '<h2>How to play</h2><p>Crack the hidden code: a row of symbols.</p>' +
+      '<ol><li>Tap symbols to fill the row. Tap one in the row to take it back.</li><li>Tap <b>Check</b>. The clue counts:' +
+        '<span class="cb-howto-key"><span>' + MARK_RIGHT + 'right symbol, right spot</span><span>' + MARK_WRONG + 'right symbol, wrong spot</span></span></li></ol>' +
+      '<div class="cb-howto-ex"><span class="label">Code</span>' + miniRow([0, 1, 2, 3]) + '<span></span>' +
+        '<span class="label">Guess</span>' + miniRow([0, 2, 4, 1]) + clueHTML([1, 2]) + '</div>' +
+      '<p>The circle is in the right spot. The triangle and the square are in the code, but in other spots. The star isn’t in the code. The clue only counts: it never says which symbol is which.</p>' +
+      '<p>On Medium and Hard, a symbol can be used more than once.</p>' +
+      '<p><b>Hint</b> gives you a nudge. <b>Show me</b> shows the code. <b>Daily</b> is one code, the same for everyone today.</p>' +
+      '<p class="cb-howto-keys">Keys: <b>1</b>–<b>7</b> symbols · <b>Backspace</b> · <b>Enter</b> check · <b>H</b> hint · <b>N</b> next</p>',
+    dailyDone: date => !!Lab.store.get(ID + '.daily.' + date, null),
+    daily: dailyFor,
     mount
   });
 })();
