@@ -47,7 +47,7 @@ A game lives in `src/games/<id>/`: its CSS, its script files (wrapped together s
 
 **2048.** Slide the tiles; two matching tiles merge into one worth double. Make a 2048 tile before the board fills.
 
-- **Play**: Classic, saved in the browser to finish later, or a Challenge: 128 in 100 slides, 256 in 190, 512 in 340.
+- **Play**: Classic, saved in the browser to finish later, or a Challenge: 128 in 120 slides, 256 in 220, 512 in 420.
 - **Daily**: 150 slides on the same tiles for everyone that day, ending on a card with the final board, the score, the biggest tile and the look-ahead player's score on the same tiles.
 - **Board**: for the panel, with big arrows to tap while the class votes each slide.
 - Tiles as numbers (32) or powers (2⁵), with each slide's biggest merge under the board as an equation: 2⁵ + 2⁵ = 2⁶.

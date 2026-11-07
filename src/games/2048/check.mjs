@@ -100,9 +100,9 @@ export default async function check(page, { mode, expect, viewport, shot }) {
     expect(await page.locator('.t48-tile sup').count() === 2, '2048 Play: powers show as 2 with an exponent');
     await shot('2048-challenge');
     await palette(page, shot, '2048-tiles-powers');
-    await slideKeys(page, 100, 5);
+    await slideKeys(page, 120, 5);
     const end = (await state(page)).end;
-    expect(end === 'won' || end === 'out', `2048 Play: the Challenge ends within 100 slides (${end})`);
+    expect(end === 'won' || end === 'out', `2048 Play: the Challenge ends within its 120 slides (${end})`);
     await page.locator('.t48-review').waitFor();
     await page.locator('.t48-review .t48-wait').waitFor({ state: 'detached', timeout: 8000 });
     expect(await page.locator('.t48-review .r-stat').count() === 2, '2048 Play: the review shows the score and the biggest tile');
