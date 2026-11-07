@@ -46,13 +46,13 @@ button { cursor: pointer; touch-action: manipulation; -webkit-user-select: none;
 .label { margin: 0; color: var(--teal); font-weight: 700; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
 
 /* ---------- controls ---------- */
-.btn { border: 0; border-radius: 999px; background: var(--paleturq); color: var(--navy); font-weight: 700; font-size: 1rem; padding: .65rem 1.3rem; min-height: 2.75rem; white-space: nowrap; }
+.btn { border: 0; border-radius: 999px; background: var(--accent-pale); color: var(--navy); font-weight: 700; font-size: 1rem; padding: .65rem 1.3rem; min-height: 2.75rem; white-space: nowrap; }
 .btn.primary { background: var(--accent); font-weight: 900; }
 .btn.sand { background: var(--sand); }
 .btn:disabled { opacity: .4; cursor: default; }
 .mini { border: 0; border-radius: 999px; background: var(--sand); color: var(--navy); font-weight: 700; font-size: .85rem; padding: .3rem .85rem; min-height: 2rem; white-space: nowrap; }
 .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.chip { background: var(--paleturq); color: var(--navy); border: 0; border-radius: 999px; font-weight: 700; font-size: 14px; padding: 0 14px; min-height: 40px; font-variant-numeric: tabular-nums; }
+.chip { background: var(--accent-pale); color: var(--navy); border: 0; border-radius: 999px; font-weight: 700; font-size: 14px; padding: 0 14px; min-height: 40px; font-variant-numeric: tabular-nums; }
 .chip[aria-pressed="true"] { background: var(--accent); font-weight: 900; }
 
 /* ---------- dock: the one chrome bar ---------- */
@@ -103,6 +103,9 @@ button { cursor: pointer; touch-action: manipulation; -webkit-user-select: none;
 .r-key .r-sq { width: 1.35rem; font-size: .75rem; border-radius: 5px; }
 .r-key .r-sq.helped { box-shadow: inset 0 0 0 2px var(--accent); }
 .results .sheet-foot { justify-content: center; }
+/* a replay: one plain badge, and everything that could pass for today's result greyed out */
+.r-replay { background: var(--sand); color: var(--navy); font-weight: 900; font-size: .95rem; border-radius: 999px; padding: .35rem 1rem; }
+.results.replay > :not(.r-replay):not(.r-game):not(.sheet-foot) { filter: grayscale(1); opacity: .55; }
 
 /* ---------- hub ---------- */
 .hub { display: flex; flex-direction: column; gap: var(--gap); }
@@ -122,7 +125,8 @@ button { cursor: pointer; touch-action: manipulation; -webkit-user-select: none;
 /* ---------- a game's own front page ---------- */
 .home { flex: 1; display: grid; place-items: center; min-height: 0; }
 .home-card { width: min(40rem, 100%); padding: clamp(1.2rem, 4.5vh, 2.6rem) clamp(1.2rem, 4vw, 3rem); display: flex; flex-direction: column; align-items: center; gap: clamp(.9rem, 2.8vh, 1.7rem); text-align: center; }
-.home-title { margin: 0; font-weight: 900; font-size: clamp(2.4rem, 7.5vh, 4.4rem); line-height: 1; letter-spacing: -.01em; }
+/* A long one-word name (Codebreaker) shrinks to fit a phone; short names keep the full size. --chars is the longest word's length. */
+.home-title { margin: 0; font-weight: 900; font-size: min(clamp(2.4rem, 7.5vh, 4.4rem), calc(137.5vw / var(--chars, 1))); line-height: 1; letter-spacing: -.01em; }
 .modes { display: flex; flex-wrap: wrap; justify-content: center; gap: .7rem; }
 .modes .btn { min-width: 8.5rem; font-size: 1.15rem; padding: .85rem 1.6rem; min-height: 3.2rem; }
 .modes .done { margin-left: .35rem; font-weight: 900; }
@@ -370,7 +374,11 @@ sup.ex { font-size: .68em; line-height: 0; vertical-align: baseline; position: r
         else if (!e.shiftKey && doc.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     }
-    back.addEventListener('click', e => { if (e.target === back || e.target.closest('[data-close]')) close(); });
+    const opened = Date.now(); /* the second tap of a double tap that opened the sheet must not close it */
+    back.addEventListener('click', e => {
+      if (Date.now() - opened < 450) return;
+      if (e.target === back || e.target.closest('[data-close]')) close();
+    });
     doc.addEventListener('keydown', onKey, true);
     doc.body.appendChild(back);
     (box.querySelector('[data-close]') || box).focus({ preventScroll: true });
@@ -384,16 +392,18 @@ sup.ex { font-size: .68em; line-height: 0; vertical-align: baseline; position: r
     helped: ['✓', 'solved with hints'],
     shown: ['–', 'answer shown']
   };
-  /* r: { game, sub, squares?: ['clean' | 'helped' | 'shown'], body?: html of the game's own, stats: [[value, label]], key?: false } */
+  /* r: { game, sub, squares?: ['clean' | 'helped' | 'shown'], body?: html of the game's own, stats: [[value, label]], key?: false,
+          replay?: true — a Daily played again: the card says so and greys out, so it can't pass for the day's result } */
   Lab.results = function (r, opts) {
     const sq = r.squares || [];
     const squares = sq.length ? '<div class="r-squares">' + sq.map((s, i) => '<span class="r-sq ' + s + '" role="img" aria-label="' + (i + 1) + ': ' + SQ[s][1] + '">' + SQ[s][0] + '</span>').join('') + '</div>' : '';
     const stats = r.stats.map(s => '<div class="r-stat"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>').join('');
     const key = sq.length && r.key !== false ? '<p class="r-key">' + ['clean', 'helped', 'shown'].map(s => '<i><span class="r-sq ' + s + '" aria-hidden="true">' + SQ[s][0] + '</span>' +
       (s === 'clean' ? 'No hints' : s === 'helped' ? 'With hints' : 'Shown') + '</i>').join('') + '</p>' : '';
-    const html = '<p class="r-game">' + esc(r.game) + '</p><p class="r-sub">' + esc(r.sub) + '</p>' + squares + (r.body || '') +
-      '<div class="r-stats">' + stats + '</div>' + key;
-    return Lab.sheet(html, Object.assign({ cls: 'results', label: r.game + ' results' }, opts));
+    const html = (r.replay ? '<p class="r-replay">Replay · not today\u2019s result</p>' : '') +
+      '<p class="r-game">' + esc(r.game) + '</p><p class="r-sub">' + esc(r.sub) + '</p>' + squares + (r.body || '') +
+      '<div class="r-stats">' + stats + '</div>' + (r.replay ? '' : key);
+    return Lab.sheet(html, Object.assign({ cls: 'results' + (r.replay ? ' replay' : ''), label: r.game + (r.replay ? ' replay' : '') + ' results' }, opts));
   };
 
   /* ---------- screens: hub, a game's front page, a mode ---------- */
@@ -513,7 +523,7 @@ sup.ex { font-size: .68em; line-height: 0; vertical-align: baseline; position: r
     const app = clearScreen();
     const done = game.dailyDone && game.dailyDone(Lab.today());
     app.innerHTML = '<div class="home"><section class="card home-card" aria-label="' + esc(game.name) + '">' +
-      '<h1 class="home-title">' + esc(game.name) + '</h1>' + (game.art || '') +
+      '<h1 class="home-title" style="--chars:' + Math.max(...String(game.name).split(/\s+/).map(w => w.length)) + '">' + esc(game.name) + '</h1>' + (game.art || '') +
       '<div class="modes">' + game.modes.map(m => '<button class="btn' + (m === 'play' ? ' primary' : '') + '" type="button" data-mode="' + m + '">' +
         MODE_NAME[m] + (m === 'daily' && done ? '<span class="done" aria-label="done today">✓</span>' : '') + '</button>').join('') + '</div>' +
       '<button class="mini" type="button" data-howto>How to play</button></section></div>';
@@ -1216,7 +1226,8 @@ function customPuzzle(strs) {
       const hints = result.results.reduce((n, r) => n + (r.hints || 0), 0);
       const sh = Lab.results({
         game: 'Make 24',
-        sub: 'Daily · ' + Lab.dateWords(result.date) + (replay ? ' · replay' : ''),
+        sub: 'Daily · ' + Lab.dateWords(result.date),
+        replay,
         squares: result.results.map(r => r.status),
         stats: [[solved + ' of ' + result.results.length, 'Solved'], [Lab.clock(result.ms), 'Time'], [String(hints), hints === 1 ? 'Hint' : 'Hints']]
       }, { done: 'Done', onClose: ctx.home, extra: '<button class="btn" type="button" data-again>Play again</button>' });
