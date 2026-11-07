@@ -10,6 +10,7 @@ Students reach the games through the class Google Site (GitHub and the class web
 | --- | --- |
 | `game-lab.html` | The Game Lab hub, with every game in it (built) |
 | `make-24.html` | Make 24 on its own, opening straight to the game (built) |
+| `codebreaker.html` | Codebreaker on its own (built) |
 | `src/` | The source: the kit, the font, and each game in `src/games/<id>/` |
 | `src/games.json` | Which games are in, in hub order, and their file names |
 | `tools/build.mjs` | Writes the built files from `src/` |
@@ -43,6 +44,13 @@ A game lives in `src/games/<id>/`: its CSS, its script files (wrapped together s
 - Number sets 1–9, 1–13, integers, fractions, decimals, powers and negative powers; Easy, Medium and Hard (plus Mixed on the board).
 - Hints climb a ladder (any powers, then the last move, then the first), then Show me and Another way.
 - Scaled back from the board version on purpose: no teams, no print sets, no typed-in hands.
+
+**Codebreaker.** Crack a hidden code of symbols. After each guess, the clue counts ● right symbol, right spot and ○ right symbol, wrong spot.
+
+- **Play**: Easy (4 spots, 5 symbols, no repeats), Medium (4 of 6, repeats) or Hard (5 of 7, repeats), with a solved count and a streak.
+- **Daily**: one Medium code, the same on every device that day, ending on a results card with each guess's clue marks.
+- **Board**: for the panel, with the number of codes that still fit after every guess.
+- Hints climb a ladder (how many codes still fit, a fact the clues prove, a strong next guess), then Show me. After every round: the codes left after each guess, the guess that ruled out the most, and any guess that broke an earlier clue.
 
 ## Rules every game follows
 
