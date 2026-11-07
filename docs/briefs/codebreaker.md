@@ -33,10 +33,12 @@ Tap a symbol to fill the next empty spot, tap a filled spot to clear it, and Che
 ## Hint ladder
 
 1. How many codes still fit every clue so far.
-2. One fact the clues prove, in words: "The star isn't in the code", "There's a circle in spot 2", "There's at least one triangle". If nothing is proven yet, the advice that the next guess should fit every clue so far.
-3. A strong next guess: the one that leaves the fewest codes in the worst case.
+2. One fact the clues prove, in words: "The star isn't in the code", "There's a circle in spot 2", "There's at least one triangle", with the reason when a single clue proves it. If nothing is proven yet, the advice that the next guess should fit every clue so far.
+3. A strong next guess: of the codes that still fit every clue, the one that leaves the fewest codes in the worst case. A hint only ever suggests a code that could still be the answer, so it never models the mistake the debrief points out.
 
-**Show me** reveals the code. Running out of guesses reveals it too. The results mark each round solved clean, solved with hints, or shown.
+Before the first guess there are no clues, so Hint goes straight to a suggested opening guess.
+
+**Show me** reveals the code (on the Daily and on Board it asks first). Running out of guesses reveals it too. The results mark each round solved clean, solved with hints, or shown, and count hints once per guess: a guess where you took any help counts as one hint.
 
 ## Debrief, after every round
 
@@ -46,7 +48,7 @@ Tap a symbol to fill the next empty spot, tap a filled spot to clear it, and Che
 
 ## Engine
 
-Every possible code is listed once per round, and a guess is scored against a code with repeats counted properly. Hints and the debrief work from the list of codes that still fit. On Hard, the strong-guess search may limit itself to the codes that still fit, so that every hint answers in under a quarter second on a Chromebook.
+Every possible code is listed once per round, and a guess is scored against a code with repeats counted properly. Hints and the debrief work from the list of codes that still fit. The strong-guess search looks only at codes that still fit (on Hard, an evenly spaced sample of them), so that every hint answers in under a quarter second on a Chromebook.
 
 ## Look
 
