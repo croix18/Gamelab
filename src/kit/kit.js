@@ -114,10 +114,10 @@
         else if (!e.shiftKey && doc.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     }
-    const opened = Date.now(); /* the second tap of a double tap that opened the sheet must not close it */
+    const opened = Date.now(); /* the second tap of a double tap that opened the sheet must not close it from the backdrop */
     back.addEventListener('click', e => {
-      if (Date.now() - opened < 450) return;
-      if (e.target === back || e.target.closest('[data-close]')) close();
+      if (e.target.closest('[data-close]')) close();
+      else if (e.target === back && Date.now() - opened >= 450) close();
     });
     doc.addEventListener('keydown', onKey, true);
     doc.body.appendChild(back);
