@@ -14,7 +14,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html { height: 100%; font-size: clamp(15px, 0.6vw + 0.9vh, 24px); }
+html { height: 100%; font-size: clamp(15px, 0.6vw + 0.9vh, 24px); overscroll-behavior: none; } /* no pull-to-refresh or bounce mid-game */
+body { overscroll-behavior: none; }
 body {
   margin: 0; height: 100%; overflow: hidden;
   font-family: var(--sans); color: var(--navy); line-height: 1.3; -webkit-text-size-adjust: 100%;

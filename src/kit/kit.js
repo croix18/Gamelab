@@ -133,11 +133,13 @@
     shown: ['–', 'answer shown']
   };
   /* r: { game, sub, squares?: ['clean' | 'helped' | 'shown'], body?: html of the game's own, stats: [[value, label]], key?: false,
-          replay?: true — a Daily played again: the card says so and greys out, so it can't pass for the day's result } */
+          replay?: true — a Daily played again: the card says so and greys out, so it can't pass for the day's result,
+          streak?: true — a Daily card: adds the day streak (days in a row with a Daily done; save the result first) } */
   Lab.results = function (r, opts) {
     const sq = r.squares || [];
     const squares = sq.length ? '<div class="r-squares">' + sq.map((s, i) => '<span class="r-sq ' + s + '" role="img" aria-label="' + (i + 1) + ': ' + SQ[s][1] + '">' + SQ[s][0] + '</span>').join('') + '</div>' : '';
-    const stats = r.stats.map(s => '<div class="r-stat"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>').join('');
+    const streak = r.streak && !r.replay ? Lab.dailyStreak() : 0;
+    const stats = r.stats.concat(streak ? [[String(streak), 'Day streak']] : []).map(s => '<div class="r-stat"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>').join('');
     const key = sq.length && r.key !== false ? '<p class="r-key">' + ['clean', 'helped', 'shown'].map(s => '<i><span class="r-sq ' + s + '" aria-hidden="true">' + SQ[s][0] + '</span>' +
       (s === 'clean' ? 'No hints' : s === 'helped' ? 'With hints' : 'Shown') + '</i>').join('') + '</p>' : '';
     const html = (r.replay ? '<p class="r-replay">Replay · not today\u2019s result</p>' : '') +
