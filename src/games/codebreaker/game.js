@@ -417,6 +417,7 @@
         game: 'Codebreaker',
         sub: 'Daily · ' + Lab.dateWords(result.date),
         replay: !!replay,
+        streak: true,
         squares: [result.outcome],
         body,
         stats: [[(won ? rows.length : 'X') + ' of ' + result.limit, 'Guesses'], [Lab.clock(result.ms), 'Time'], [String(hints), hints === 1 ? 'Hint' : 'Hints']]
