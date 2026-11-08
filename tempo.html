@@ -733,7 +733,7 @@ body.focus .tabs { display: none; }
 .review-list .tick .ic { width: 15px; height: 15px; }
 
 /* ---------- chess clock: the whole screen is the clock ---------- */
-/* its own colours in light and dark alike: navy while you wait, gold while your time runs, coral when it's nearly gone */
+/* its own colors in light and dark alike: navy while you wait, gold while your time runs, coral when it's nearly gone */
 .clock-app {
   --ck-wait: #1B2A4A; --ck-wait-ink: rgba(251, 246, 234, 0.9);
   --ck-run: #D4AF37; --ck-run-ink: #16223D;
@@ -1174,7 +1174,7 @@ div.rv-verdict { font-weight: 600; }
 .profile-note { margin: 14px 0 0; font-size: 14px; line-height: 1.45; color: var(--ink-2); max-width: 62ch; }
 
 /* ---------- the characters and their tiers ---------- */
-/* a tier's letter, in the colours of its badges */
+/* a tier's letter, in the colors of its badges */
 .tier-badge { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; border-radius: 9px; font-family: var(--serif); font-size: 18px; line-height: 1; box-shadow: inset 0 0 0 1px rgba(27, 42, 74, 0.18); }
 .tier-badge.lg { width: 46px; height: 46px; border-radius: 13px; font-size: 27px; }
 .tier-badge.t-F { background: #F3E9CF; color: #1B2A4A; box-shadow: inset 0 0 0 1.5px #C9A227; }
@@ -2323,7 +2323,7 @@ var FAM = {
     'c4 Nf6 d4 c5 d5 e6 Nc3 exd5 cxd5 d6', 'Nf3 c5 c4 Nf6 Nc3 e6 g3 b6 Bg2 Bb7 O-O Be7', 'Nf3 c5 e4', 'Nf3 c5 d4 cxd4 Nxd4 Nf6', 'Nf3 Nf6 d4 c5 d5 e6 c4 exd5 cxd5 d6',
     'Nf3 Nf6 c4 c5 Nc3 Nc6 d4', 'g3 c5 Bg2 Nc6 Nf3 g6', 'b3 c5 Bb2 Nc6 e3 Nf6', 'e3 c5 d4 Nf6', 'f4 d5']],
 
-  /* ---------- fill-ins: answers a White repertoire needs to the defences its families don't cover ---------- */
+  /* ---------- fill-ins: answers a White repertoire needs to the defenses its families don't cover ---------- */
   'vs-sicilian-open': ['=', ['open-sicilian']],
   'vs-sicilian-alapin': [W, ['e4 c5 c3 d5', 'e4 c5 c3 d5 exd5 Qxd5 d4 Nf6 Nf3 Bg4 Be2 e6 O-O Nc6 h3 Bh5 Be3 cxd4 cxd4', 'e4 c5 c3 e6 d4 d5 exd5 exd5 Nf3 Nc6 Bb5 Bd6 dxc5 Bxc5 O-O',
     'e4 c5 c3 d6 d4 Nf6 Bd3 Nc6 Nf3 Bg4 d5 Ne5', 'e4 c5 c3 Nc6 d4 d5 exd5 Qxd5 Nf3 Bg4 Be2 cxd4 cxd4 e6 Nc3', 'e4 c5 c3 g6 d4 cxd4 cxd4 d5 e5 Nc6 Nc3 Bg7',
@@ -2590,7 +2590,7 @@ function strength(r, base) {
   c.qs = c.qs !== false;
   return c;
 }
-/* Stockfish for the Masters and Legends: it analyses several moves at full skill, and the character chooses among
+/* Stockfish for the Masters and Legends: it analyzes several moves at full skill, and the character chooses among
    the ones within `margin` centipawns of the best. `err` is how often it allows itself a wider margin (`errMargin`),
    the slips a strong human still makes; stronger characters slip less and see further. The Masters search to a set
    depth (with a time cap for slow devices), one ply more every 100 points: against Celeste, the original 2000,
@@ -2725,7 +2725,7 @@ var NUDGE = {
 /* random moves and oversights shift a little with the archetype, inside the strength they were tuned for */
 var EXTRA = { chaos: { random: 0.06, jitter: 20 }, surprise: { random: 0.03 }, reckless: { blunder: 0.04 }, retreater: { random: -0.02 } };
 
-/* ---------- opening books: families from the profile, plus fill-ins for the defences they don't cover ---------- */
+/* ---------- opening books: families from the profile, plus fill-ins for the defenses they don't cover ---------- */
 function bookFor(p, style) {
   var w = p.book.white.slice(), e4 = p.book.black_vs_e4.slice(), d4 = p.book.black_vs_d4.slice();
   var sharp = (p.behavior_traits_0_to_100 || {}).aggression >= 60;
@@ -3937,7 +3937,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = TempoPiece
 
 ;
 /* Tempo portraits.
-   The characters each get an original badge, never a drawing of the character: their initials on their tier's colour,
+   The characters each get an original badge, never a drawing of the character: their initials on their tier's color,
    with a small mark for how they play (a flame for a gambiteer, a shield for a defender, a crown for the champion).
    The original ladder bots keep their small drawn portraits, so old games still show who they were against. */
 var TempoAvatars = (function () {
@@ -5403,11 +5403,11 @@ var Engines = (function () {
   /* opts: fen (start), moves (uci list), depth, movetime, multipv. Scores are from the side to move. */
   function analyse(opts) {
     if (sfReady()) {
-      // newGame clears Stockfish's memory first, so one review isn't coloured by the searches before it
+      // newGame clears Stockfish's memory first, so one review isn't colored by the searches before it
       var job = { fen: opts.fen, moves: opts.moves, depth: opts.depth || 0, movetime: opts.movetime || 0, multipv: opts.multipv || 1, skill: 20, onInfo: opts.onInfo, newGame: !!opts.newGame };
       return sfRun(job).then(function (r) {
         if (r) return r;
-        // a search cancelled because you left the screen has no one waiting for it: don't redo it on the built-in engine
+        // a search canceled because you left the screen has no one waiting for it: don't redo it on the built-in engine
         if (job.cancelled) return { best: null, lines: [], engine: 'none', cancelled: true };
         return tempoAnalyse(opts);
       });
@@ -5448,7 +5448,7 @@ var Engines = (function () {
       return { uci: r.move, via: 'tempo', kind: r.kind, score: r.score, best: r.best, top: r.top || null };
     });
   }
-  /* Stockfish analyses several moves at full skill; TempoBots.sfPick chooses among them for the character */
+  /* Stockfish analyzes several moves at full skill; TempoBots.sfPick chooses among them for the character */
   function sfChoose(bot, game, st, ctx) {
     var t0 = Date.now();
     return sfRun({ fen: game.fen, moves: game.moves, depth: st.depth || 0, movetime: st.movetime, skill: 20, multipv: st.multipv }).then(function (r) {
@@ -6363,7 +6363,7 @@ var Board = (function () {
         var from = freeOld[best], el = old[from]; freeOld[best] = -1;
         if (dur) {
           /* Lifted, carried in a straight line, set down: one animation of the piece's own transform, its lift (a slight
-             scale) about the piece's own centre. (Scaling with the separate scale property also scaled the piece's
+             scale) about the piece's own center. (Scaling with the separate scale property also scaled the piece's
              distance from the board's corner, so it swung round its square as it landed.) */
           var A = this.xy(from), Z = this.xy(sq);
           var at = function (x, y, k) { return 'translate(' + (x * 100) + '%,' + (y * 100) + '%) scale(' + k + ')'; };
@@ -6638,7 +6638,7 @@ var Board = (function () {
   };
   B.cancelDrag = function () {
     var d = this.drag; this.drag = null; this.hover = -1;
-    if (d && d.el) { d.el.classList.remove('dragging'); if (d.started) this.el.classList.add('anim'); this.place(d.el, d.sq); } // a cancelled drag glides home like a refused one
+    if (d && d.el) { d.el.classList.remove('dragging'); if (d.started) this.el.classList.add('anim'); this.place(d.el, d.sq); } // a canceled drag glides home like a refused one
     this.paint();
   };
 
@@ -11371,7 +11371,7 @@ var Learn = (function () {
   }
   function open(id, from) { App.go('learn', from ? { lesson: id, from: from } : { lesson: id }); }
   function sans(x) { return Array.isArray(x) ? x.slice() : String(x || '').trim().split(/\s+/).filter(Boolean); }
-  function colour(c) { return c === 'w' ? 'White' : 'Black'; }
+  function colorName(c) { return c === 'w' ? 'White' : 'Black'; }
   function other(c) { return c === 'w' ? 'b' : 'w'; }
   function sideNum(c) { return c === 'w' ? 1 : -1; }
   function sideOf(pos) { return pos.side === 1 ? 'w' : 'b'; }
@@ -11418,7 +11418,7 @@ var Learn = (function () {
         if (s.t === 'walk') r = { t: 'walk', moves: moves, notes: t.notes || {}, orient: t.side, text: t.summary, end: t.lesson };
         else if (s.t === 'line') {
           var defend = s.role === 'defend' || (!!t.noSet && s.role !== 'set');
-          var side = defend ? t.side : setter, who = colour(side);
+          var side = defend ? t.side : setter, who = colorName(side);
           r = { t: 'line', moves: moves, side: side, guide: !!s.guide, done: t.lesson,
             text: s.text || (defend
               ? (s.guide ? '**Defend it.** You’re ' + who + '. Play ' + who + '’s moves. The arrows show the way.' : '**From memory.** Play ' + who + '’s moves again, with no arrows.')
@@ -11431,7 +11431,7 @@ var Learn = (function () {
             // the trap's notes speak to the side the lesson is told from: shown while the trap plays out only when that side is you
             r = { t: 'safe', moves: moves.slice(0, key), side: victim, bait: t.bait || moves[key], punish: custom ? sans(t.punish) : moves.slice(key + 1),
               baitAt: key, notes: custom || t.side !== victim ? {} : (t.notes || {}), aim: t.safe ? [t.safe] : null, note: t.safeNote || '', baitNote: t.baitNote || '',
-              text: s.text || ('**Dodge it.** Now you’re ' + colour(victim) + ', and the computer sets the trap. When it’s your move, don’t take the bait.') };
+              text: s.text || ('**Dodge it.** Now you’re ' + colorName(victim) + ', and the computer sets the trap. When it’s your move, don’t take the bait.') };
           }
         } else r = { t: 'read', text: t.summary };
         r.trap = t.id;
@@ -11495,7 +11495,7 @@ var Learn = (function () {
   }
 
   /* ---------- practice puzzles ---------- */
-  /* the puzzle theme that practises each lesson */
+  /* the puzzle theme that practices each lesson */
   var PRACTICE = { 'fork': 'fork', 'pin': 'pin', 'skewer': 'skewer', 'discovered-attack': 'discoveredAttack', 'remove-defender': 'capturingDefender',
     'deflection-decoy': 'deflection', 'trapped-piece': 'trappedPiece', 'back-rank': 'backRankMate', 'smothered-mate': 'smotheredMate', 'mating-patterns': 'mateIn2',
     'free-pieces': 'hangingPiece', 'check-mate-stalemate': 'mateIn1', 'passed-pawns': 'advancedPawn', 'rook-endgames': 'rookEndgame', 'king-pawn': 'pawnEndgame', 'overload': 'deflection' };
@@ -12150,7 +12150,7 @@ var Learn = (function () {
     }
     /* what the bait cost, once its punishment has played out: checkmate, or the material lost (trades cancel out) */
     function baitCost(pos, you, lost, won, s, last, takeBack) {
-      if (pos.status().reason === 'checkmate') return 'That lets ' + colour(you === 1 ? 'b' : 'w') + ' give checkmate.';
+      if (pos.status().reason === 'checkmate') return 'That lets ' + colorName(you === 1 ? 'b' : 'w') + ' give checkmate.';
       if (s.baitNote) return s.baitNote;
       var VAL = [0, 1, 3, 3, 5, 9, 0], gave = lost.slice(), got = won.slice();
       // if the last move took something and you can take that piece back for free, count it
@@ -12235,7 +12235,7 @@ var Learn = (function () {
       st.inBook = true; st.bookLeft = null; st.yourMoves = 0;
       navRow(false);
       tool(h('button', { class: 'btn small quiet', type: 'button', onclick: function () { show(st.i); } }, U.icon('refresh'), 'Restart'));
-      fb('info', 'You’re ' + colour(s.side) + '. Follow your lines while the game stays in them, then keep playing good moves until move ' + s.until + '.');
+      fb('info', 'You’re ' + colorName(s.side) + '. Follow your lines while the game stays in them, then keep playing good moves until move ' + s.until + '.');
       paintMoves(s);
       gameStep();
     }
@@ -12453,7 +12453,7 @@ var Learn = (function () {
     var l = d.lesson, k = d.rec.k || 0, tag = function (s) {
       var r = Object.assign({}, s, { from: l.id, fromTitle: l.title, resolved: null });
       // a review is recall: a line that had arrows in the lesson comes back without them
-      if (s.t === 'line' && s.guide && !s.trap) { r.guide = false; r.text = '**From memory.** Play ' + colour(s.side || 'w') + '’s moves in this line, with no arrows.'; }
+      if (s.t === 'line' && s.guide && !s.trap) { r.guide = false; r.text = '**From memory.** Play ' + colorName(s.side || 'w') + '’s moves in this line, with no arrows.'; }
       return r;
     };
     if (l.trap) {
@@ -12933,7 +12933,7 @@ var Openings = (function () {
 
   /* ---------- your games against your repertoire ---------- */
 
-  /* How far a game from the normal start followed a line you've learned, for your colour.
+  /* How far a game from the normal start followed a line you've learned, for your color.
      Returns null when no learned line applies, or { rep, line, key, k, len, expected, agree, options }:
      k plies of the game matched the line position by position, len is the line's length, expected is the
      move the line plays at ply k (null past its end), and agree is false when other lines that matched as far

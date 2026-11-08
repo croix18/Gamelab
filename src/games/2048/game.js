@@ -367,7 +367,7 @@
       if (S.hints) bits.push('With hints');
       q('.t48-meta').textContent = bits.join(' · ');
 
-      /* "Slides left" carries its own bar, in a neutral colour, so it never reads as progress toward the goal */
+      /* "Slides left" carries its own bar, in a neutral color, so it never reads as progress toward the goal */
       const stat = (label, value, left) => '<div class="t48-stat' + (left === undefined ? '' : ' t48-left') + '"><span class="label">' + label + '</span><b>' + value + '</b>' +
         (left === undefined ? '' : '<i class="t48-lbar"><i style="transform: scaleX(' + Math.max(0, Math.min(1, left)) + ')"></i></i>') + '</div>';
       let stats;

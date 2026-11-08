@@ -34,7 +34,7 @@ sup.t48-ex { font-size: .56em; line-height: 0; position: relative; top: -.68em; 
 .t48-stats { display: flex; flex-wrap: wrap; gap: .4rem clamp(1.2rem, 2.4vw, 2.2rem); }
 .t48-stat { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
 .t48-stat b { font-weight: 900; font-size: clamp(1.45rem, 4.4vh, 2.7rem); line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
-/* slides left, with its own bar in a neutral colour */
+/* slides left, with its own bar in a neutral color */
 .t48-left { min-width: 6.2rem; }
 .t48-lbar { display: block; height: 6px; margin-top: .3rem; border-radius: 999px; background: #EEE6D7; overflow: hidden; }
 .t48-lbar i { display: block; height: 100%; border-radius: inherit; background: #8D99A6; transform-origin: left; transition: transform .2s ease; }
