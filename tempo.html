@@ -7945,7 +7945,7 @@ var Review = (function () {
     // o.jump: straight there (Start and End), without playing the moves on the way
     function goPly(n, o) {
       n = Math.max(0, Math.min(moves.length, n));
-      clearTimeout(st.lineT); clearTimeout(st.travelT); clearTimeout(st.playT);
+      clearTimeout(st.lineT); clearTimeout(st.travelT); clearTimeout(st.playT); clearTimeout(st.followT); st.followT = null;
       st.token++; st.ply = n; st.shown = n; st.mode = 'game'; st.retry = null; st.practice = null; st.play = null;
       if (!(o && o.stay)) st.follow = false; // you took over the board from the engine's replay
       if (st.res && !(o && o.stay)) setStage('walk');
@@ -8723,7 +8723,7 @@ var Review = (function () {
     }
 
     /* ---------- while the engine reads the game ----------
-       The board replays the game as the engine reads it, under a gold scanner, while the pieces hop about nervously;
+       The board runs back to the start and replays the game as the engine reads it, under a gold scanner, while the pieces hop about nervously;
        the eval bar and the graph fill in as it goes; Tempo's mark spins; and silly lines keep you company. A move the
        engine wants a closer look at gets a gold ring and a suspicious remark. Tap a move and the board is yours again.
        With reduced motion: no scanner, no hopping, no spinning. */
@@ -8747,6 +8747,10 @@ var Review = (function () {
       st.progBar = UI.meter(0);
       recapBox.appendChild(st.progBar);
       st.sillyT = setInterval(function () { silly(); }, 2600);
+      // the board runs back to the start, and the game plays through again as the engine reads it
+      st.follow = true; st.followTo = 0;
+      put(0, true); board.setMarks([]);
+      evalFill.style.height = '50%';
     }
     /* the next silly line (or the one given), sliding in */
     function silly(text) {
@@ -8756,7 +8760,7 @@ var Review = (function () {
       st.silly.textContent = text; st.silly.classList.add('in');
     }
     function stopScan() {
-      clearInterval(st.sillyT);
+      clearInterval(st.sillyT); clearTimeout(st.followT); st.followT = null; st.follow = false;
       arena.classList.remove('rv-scanning');
       if (st.beam) { st.beam.remove(); st.beam = null; }
     }
@@ -8779,12 +8783,23 @@ var Review = (function () {
       else if (st.follow && deep && st.at === j + 1) board.setMarks([{ sq: moves[j].slice(2, 4), kind: 'ring' }]);
       liveGraph();
     }
+    /* The engine has read up to position k: the board plays the moves there one at a time, at a natural pace when it's
+       close behind and briskly when the engine has raced ahead, so you watch the game again as it's checked. */
     function follow(k) {
-      if (k == null || k < 0 || k > moves.length || (st.at != null && k <= st.at)) return;
-      put(k, true);
+      if (k == null || k < 0 || k > moves.length || k <= (st.followTo || 0)) return;
+      st.followTo = k;
+      if (!st.followT) followStep();
+    }
+    function followStep() {
+      st.followT = null;
+      if (!st.follow || st.cancelled || st.at == null || st.at >= st.followTo) return;
+      var k = st.at + 1, behind = st.followTo - k, a = posAt(k), calm = U.calm();
+      var ms = board.setPosition(a.pos, { last: a.last, animate: !calm, natural: !calm && behind < 3 }) || 0;
+      st.at = k;
       board.setMarks([]);
       var e = st.liveEvals && st.liveEvals[k];
       if (e) { var w = whiteWin(e), flip = board.orient !== 'w'; evalBar.classList.toggle('flip', flip); evalFill.style.height = (flip ? 100 - w : w) + '%'; }
+      st.followT = setTimeout(followStep, calm ? 120 : behind < 3 ? ms + 160 : behind < 8 ? 220 : 130);
     }
     /* the graph, drawn as far as the engine has read */
     function liveGraph() {
