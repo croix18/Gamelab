@@ -39,6 +39,12 @@ function fetchAllowed(problem, html) {
   return line.includes('fetch(siteUrl(') && !html.includes('window.TEMPO_ENGINE=');
 }
 
+/* Tempo's Get my games (8 Nov 2026) reads a player's games from Chess.com's public API. The Game Lab's copy never goes on
+   the network, so that block (between Tempo's net:chesscom and net:end markers) comes out before the guard runs, and Tempo
+   offers the PGN paste alone. */
+const NET = /\/\*net:chesscom\*\/[\s\S]*?\/\*net:end\*\//g;
+export function offline(html) { return html.replace(NET, 'var ChessCom = null;'); }
+
 /** What in a Tempo build could reach the network; empty means it's clean. */
 export function tempoProblems(html) {
   return guard(html).filter(p => !ALLOWED.some(re => re.test(p)) && !fetchAllowed(p, html)).concat(urlProblems(html));
@@ -47,7 +53,7 @@ export function tempoProblems(html) {
 export function syncTempo(repo) {
   const src = join(repo, 'dist', 'Tempo.html');
   if (!existsSync(src)) throw new Error(`no built Tempo at ${src} (run python3 build/build.py in the Tempo repo)`);
-  const html = readFileSync(src, 'utf8');
+  const html = offline(readFileSync(src, 'utf8'));
   const problems = tempoProblems(html);
   if (problems.length) throw new Error('tempo.html blocked by the guard:\n  ' + problems.join('\n  '));
   let commit = 'unknown';
