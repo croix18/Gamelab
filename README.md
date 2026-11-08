@@ -12,10 +12,12 @@ Students reach the games through the class Google Site (GitHub and the class web
 | `make-24.html` | Make 24 on its own, opening straight to the game (built) |
 | `codebreaker.html` | Codebreaker on its own, opening straight to the game (built) |
 | `2048.html` | 2048 on its own, opening straight to the game (built) |
+| `tempo.html` | Tempo, the chess trainer, on its own (synced from [croix18/Tempo](https://github.com/croix18/Tempo), not built here) |
 | `src/` | The source: the kit, the font, and each game in `src/games/<id>/` |
 | `src/games.json` | Which games are in, in hub order, and their file names |
 | `tools/build.mjs` | Writes the built files from `src/` |
 | `tools/check-browser.mjs` | Plays every game in headless Chrome at Chromebook, panel and phone sizes |
+| `tools/sync-tempo.mjs` | Brings the latest Tempo build in from its repo; `src/tempo.version` says which commit |
 | `tests/` | Engine, kit and build tests |
 | `tools/push.sh` | Commit and push from a Claude session (see below) |
 | `docs/PLAN.md` | The plan: which games, in what order, and how each gets built |
@@ -30,6 +32,8 @@ node tools/build.mjs           # write game-lab.html and each game's own file
 node --test                    # engine, kit and build tests (a full year of Dailies included)
 node tools/check-browser.mjs   # play everything in headless Chrome; screenshots in out/screens/
 ```
+
+Tempo isn't built here: `node tools/sync-tempo.mjs ../tempo` copies the latest `dist/Tempo.html` from the Tempo repo into `tempo.html` and records the commit in `src/tempo.version`, so the Game Lab never carries a stale hand-copied Tempo. (One Tempo, not two: fix chess in the Tempo repo.) The sync runs the same network guard as the build; Tempo's one outside link, "Open on Lichess" on a puzzle card, is allowed.
 
 The build needs nothing but Node. It refuses to write a file that could reach the network: a web address, `fetch`, an outside script or stylesheet, or an element loading an outside file. `node tools/build.mjs --check` fails if a built file is out of date.
 
