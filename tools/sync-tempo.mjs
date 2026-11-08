@@ -20,7 +20,8 @@ const ALLOWED = [/^a web address on line \d+: https:\/\/lichess\.org\/training\/
    non-data url() forms allowed; anything else is a file loaded from somewhere. */
 function urlProblems(html) {
   const out = [];
-  for (const hit of html.matchAll(/url\(\s*(?!["']?data:)([^)]{0,40})/g)) {
+  // \burl( so that a function whose name ends in url, like b64url(bytes), isn't read as CSS
+  for (const hit of html.matchAll(/\burl\(\s*(?!["']?data:)([^)]{0,40})/g)) {
     const next = hit[1];
     if (/^#/.test(next) || /^%23/.test(next) || /^["']\s*'\s*\+/.test(next) || /^["']'\s*\+/.test(next)) continue;
     out.push(`a CSS url() that is not data: ${hit[0].slice(0, 60)}`);

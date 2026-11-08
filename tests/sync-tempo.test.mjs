@@ -19,5 +19,6 @@ test('the Tempo check still catches a real outside file', () => {
   // what Tempo does: data: images built in script, and SVGs referring to their own gradients
   assert.deepEqual(tempoProblems(`out += '{background-image:url("' + uri(c, t) + '")}'`), []);
   assert.deepEqual(tempoProblems('<rect fill="url(#f)"/> url(%23f)'), []);
+  assert.deepEqual(tempoProblems('var out = unb64url(bytes); b64url(m[2])'), []); // code, not CSS
   assert.deepEqual(tempoProblems('<a href="https://lichess.org/training/abc">Open on Lichess</a>'), []);
 });
