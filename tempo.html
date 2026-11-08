@@ -677,36 +677,36 @@ body.focus .tabs { display: none; }
 .rv-rep { color: var(--ink-2); font-size: 14.5px; }
 .v-review .rv-opening .btn { min-height: 40px; }
 @media (pointer: coarse) { .v-review .rv-opening .btn { min-height: 44px; } }
-/* review details: every kind of move with your count beside your opponent's */
-.rv-summary { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 12px; }
-.rv-sum-label { margin: 0; }
-.rv-kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
-.rv-kind-col { display: flex; flex-direction: column; min-width: 0; }
-.rv-kind-head, .rv-kind { display: grid; grid-template-columns: minmax(0, 1fr) 26px 36px; align-items: center; column-gap: 2px; }
-.rv-kind-head { padding: 0 2px 4px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
-.rv-kind-head > span:first-child { display: none; }
-.rv-kind-head > .rv-n:nth-child(2) { grid-column: 2; }
-.rv-kind { width: 100%; min-height: 34px; padding: 0 2px; border: 0; border-radius: 8px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+/* the review's scorecard: one table read straight down, your column beside your opponent's, the kind's badge between */
+.rv-summary { padding: 16px 16px 10px; }
+.rv-score { display: flex; flex-direction: column; }
+.rv-sc-row { display: grid; grid-template-columns: minmax(96px, 1.15fr) minmax(54px, 1fr) 34px minmax(54px, 1fr); align-items: center; column-gap: 8px; }
+.rv-sc-who { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; }
+.rv-sc-pname { max-width: calc(100% + 16px); font-size: 13px; font-weight: 600; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rv-sc-acc { margin-top: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.rv-sc-box { display: flex; align-items: center; justify-content: center; justify-self: center; width: 100%; max-width: 116px; height: 42px; border-radius: 10px; font-family: var(--serif); font-weight: 400; font-size: 23px;
+  font-variant-numeric: tabular-nums; background: var(--surface-2); color: var(--ink); }
+.rv-sc-box.mine { background: var(--ink); color: var(--surface); }
+.rv-sc-kinds { display: flex; flex-direction: column; padding-top: 6px; }
+.rv-sc-name { min-width: 0; font-size: 14.5px; font-weight: 600; color: var(--ink); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rv-sc-badge { justify-self: center; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 11.5px; line-height: 1; letter-spacing: -0.02em; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.28); }
+.rv-kind { width: 100%; min-height: 40px; margin: 0; padding: 0 6px; border: 0; border-radius: 8px; background: none; color: inherit; font: inherit; cursor: pointer; }
 .rv-kind:hover:not(:disabled) { background: var(--surface-2); }
 .rv-kind:disabled { cursor: default; }
-.rv-kind-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rv-kind .dot-k { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
-.rv-n { text-align: right; font-variant-numeric: tabular-nums; font-size: 14.5px; font-weight: 700; color: var(--ink); }
-.rv-n.rv-them { font-weight: 500; color: var(--ink-2); }
+.rv-kind.none .rv-sc-badge { opacity: 0.4; }
+.rv-kind.none .rv-sc-name { color: var(--ink-2); font-weight: 500; }
+.rv-sc-players, .rv-sc-acc { padding-left: 6px; padding-right: 6px; }
+.rv-n { text-align: center; font-variant-numeric: tabular-nums; font-size: 17px; font-weight: 700; color: var(--ink); }
 .rv-n.zero { font-weight: 500; color: var(--ink-3); }
-.rv-kind-head .rv-n { font-size: 12.5px; font-weight: 600; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (pointer: coarse) { .rv-kind { min-height: 40px; } }
+@media (pointer: coarse) { .rv-kind { min-height: 44px; } }
 @media (max-width: 420px) {
-  .rv-summary { padding: 12px 12px 10px; }
-  .rv-kinds { gap: 0 8px; }
-  .rv-kind-head, .rv-kind { grid-template-columns: minmax(0, 1fr) 22px 38px; column-gap: 0; }
-  .rv-kind-head .rv-n { font-size: 12px; }
-  .rv-kind-name { font-size: 13px; gap: 6px; }
-  .rv-kind .dot-k { width: 9px; height: 9px; }
-  .rv-n { font-size: 14px; }
+  .rv-summary { padding: 14px 10px 8px; }
+  .rv-sc-row { grid-template-columns: minmax(84px, 1.15fr) minmax(50px, 1fr) 30px minmax(50px, 1fr); column-gap: 4px; }
+  .rv-sc-name { font-size: 14px; }
+  .rv-sc-box { height: 38px; font-size: 21px; }
+  .rv-sc-badge { width: 22px; height: 22px; font-size: 11px; }
 }
-/* the narrowest phones: one list, so no name is cut short */
-@media (max-width: 370px) { .rv-kinds { grid-template-columns: 1fr; } .rv-kind-col + .rv-kind-col .rv-kind-head { display: none; } }
 
 
 /* ---------- lessons: practice rounds, lines and review ---------- */
@@ -984,13 +984,6 @@ div.rv-verdict { font-weight: 600; }
 .rv-link { border: 0; background: none; padding: 0 2px; margin: 0 -1px; font: inherit; font-weight: 700; color: inherit; cursor: pointer; border-radius: 4px;
   text-decoration: underline; text-decoration-color: var(--gold-fill); text-decoration-thickness: 2px; text-underline-offset: 4px; }
 .rv-link:hover { background: var(--gold-wash); }
-.rv-acc-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; padding: 14px 0 2px; border-top: 1px solid var(--line); }
-.rv-acc { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.rv-acc > div { display: flex; flex-direction: column; min-width: 0; }
-.rv-acc .label { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rv-acc b { font-family: var(--serif); font-weight: 400; font-size: 30px; line-height: 1.1; color: var(--ink); }
-.rv-acc-opp { flex-direction: row-reverse; text-align: right; }
-.rv-acc .avatar { flex: none; }
 /* the summary's bottom bar: Fix your mistakes beside Start review, where Next sits in the walk through */
 .rv-start .rv-go { flex: 1; min-height: 50px; font-size: 16.5px; gap: 8px; }
 .rv-start .rv-go .ic { order: 2; }
@@ -8030,7 +8023,7 @@ var Review = (function () {
     var card = h('section', { class: 'card rv-card', 'aria-label': 'This move', hidden: true });
     var graphBox = h('div', { class: 'rv-graph' }), movesBox = h('div', { class: 'rv-moves' }), detailsBox = h('div', { class: 'rv-more' });
     var openingBox = h('section', { class: 'card rv-opening', 'aria-label': 'Your opening', hidden: true });
-    var summaryBox = h('section', { class: 'card rv-summary', 'aria-label': 'Moves by kind', hidden: true });
+    var summaryBox = h('section', { class: 'card rv-summary', 'aria-label': 'Accuracy and moves by kind', hidden: true });
     var patternBox = h('div', { class: 'rv-pattern' });
     // under the summary only: the counts, your opening, what keeps going wrong, and the PGN
     var moreBox = h('div', { class: 'rv-extra' }, summaryBox, openingBox, patternBox, detailsBox);
@@ -8261,13 +8254,8 @@ var Review = (function () {
     function renderRecap() {
       U.clear(recapBox);
       if (!st.res) return;
-      var them = you === 'w' ? 'b' : 'w', acc = st.res.acc;
-      function accText(side) { return acc[side] == null ? 'No moves' : Math.round(acc[side]) + '%'; }
       recapBox.appendChild(h('div', { class: 'rv-coach' }, h('span', { class: 'brand-mark rv-coach-mark', 'aria-hidden': 'true' }),
         h('p', { class: 'rv-verdict' }, coachSays())));
-      recapBox.appendChild(h('div', { class: 'rv-acc-row', role: 'group', 'aria-label': 'Accuracy' },
-        h('div', { class: 'rv-acc' }, avatarFor('Y'), h('div', null, h('span', { class: 'label' }, 'Your accuracy'), h('b', null, accText(you)))),
-        h('div', { class: 'rv-acc rv-acc-opp' }, avatarFor(oppShort, src.bot), h('div', null, h('span', { class: 'label rv-opp-name', title: opp }, opp), h('b', null, accText(them))))));
       // the same bar at the bottom as the walk through: what to do next, in the same place
       var n = st.keyPlies.length;
       recapBox.appendChild(h('div', { class: 'rv-foot rv-start' },
@@ -8809,33 +8797,41 @@ var Review = (function () {
       [].forEach.call(st.plot.querySelectorAll('.rv-dot'), function (d) { d.classList.toggle('on', +d.getAttribute('data-ply') === st.ply && st.stage === 'walk'); });
     }
 
-    /* ---------- details: how many moves of each kind, yours beside your opponent's ---------- */
-    /* Every kind is listed, so a game with no blunders says 0 rather than leaving the row out.
-       Tapping a kind steps through those moves, yours first. */
-    var KIND_COLS = [['brilliant', 'great', 'best', 'excellent', 'good'], ['book', 'inaccuracy', 'mistake', 'miss', 'blunder']];
-    var SHORT = { great: 'Great', best: 'Best' }; // the summary's narrow columns; the move card keeps the full names
+    /* ---------- the scorecard: both players side by side, read straight down ---------- */
+    /* One table in two columns, yours and your opponent's: who played, the accuracy, then how many moves of each kind,
+       with the kind's badge between the two counts. Every kind is listed, so a game with no blunders says 0 rather than
+       leaving the row out. Tapping a kind steps through those moves, yours first. */
+    var SHORT = { great: 'Great', best: 'Best' }; // the move card keeps the full names
     function renderSummary() {
       U.clear(summaryBox);
       summaryBox.hidden = !st.res;
       if (!st.res) return;
-      var me = you, them = you === 'w' ? 'b' : 'w';
-      summaryBox.appendChild(h('div', { class: 'label rv-sum-label' }, 'Moves by kind'));
-      var grid = h('div', { class: 'rv-kinds', role: 'table', 'aria-label': 'Moves by kind' });
-      KIND_COLS.forEach(function (col) {
-        var group = h('div', { class: 'rv-kind-col', role: 'rowgroup' });
-        group.appendChild(h('div', { class: 'rv-kind-head', role: 'row' }, h('span', { role: 'columnheader', class: 'sr-only' }, 'Kind'),
-          h('span', { role: 'columnheader', class: 'rv-n' }, 'You'), h('span', { role: 'columnheader', class: 'rv-n', title: opp, 'aria-label': oppShort }, 'Them')));
-        col.forEach(function (k) {
-          var a = st.res.counts[me][k] || 0, b = st.res.counts[them][k] || 0;
-          group.appendChild(h('button', { class: 'rv-kind' + (a + b ? '' : ' none'), type: 'button', role: 'row', 'data-kind': k, disabled: !(a + b), 'data-repeat': '',
-              'aria-label': KINDS[k].label + ': you ' + a + ', ' + oppShort + ' ' + b, onclick: function () { stepKind(k); } },
-            h('span', { class: 'rv-kind-name', role: 'rowheader' }, h('span', { class: 'dot-k k-' + k }), SHORT[k] || KINDS[k].label),
-            h('span', { class: 'rv-n' + (a ? '' : ' zero'), role: 'cell' }, String(a)),
-            h('span', { class: 'rv-n rv-them' + (b ? '' : ' zero'), role: 'cell' }, String(b))));
-        });
-        grid.appendChild(group);
+      var me = you, them = you === 'w' ? 'b' : 'w', acc = st.res.acc;
+      function accText(side) { return acc[side] == null ? '–' : Math.round(acc[side]) + '%'; }
+      function accSay(side) { return acc[side] == null ? 'no moves' : Math.round(acc[side]) + ' percent'; }
+      var table = h('div', { class: 'rv-score' });
+      table.appendChild(h('div', { class: 'rv-sc-row rv-sc-players', 'aria-hidden': 'true' },
+        h('span'),
+        h('span', { class: 'rv-sc-who' }, avatarFor('Y'), h('span', { class: 'rv-sc-pname' }, 'You')),
+        h('span'),
+        h('span', { class: 'rv-sc-who', title: opp }, avatarFor(oppShort, src.bot), h('span', { class: 'rv-sc-pname' }, oppShort))));
+      table.appendChild(h('div', { class: 'rv-sc-row rv-sc-acc', role: 'group', 'aria-label': 'Accuracy: you ' + accSay(me) + ', ' + oppShort + ' ' + accSay(them) },
+        h('span', { class: 'rv-sc-name' }, 'Accuracy'),
+        h('b', { class: 'rv-sc-box mine' }, accText(me)),
+        h('span'),
+        h('b', { class: 'rv-sc-box' }, accText(them))));
+      var list = h('div', { class: 'rv-sc-kinds', role: 'group', 'aria-label': 'Moves by kind' });
+      ORDER.forEach(function (k) {
+        var a = st.res.counts[me][k] || 0, b = st.res.counts[them][k] || 0;
+        list.appendChild(h('button', { class: 'rv-sc-row rv-kind' + (a + b ? '' : ' none'), type: 'button', 'data-kind': k, disabled: !(a + b), 'data-repeat': '',
+            'aria-label': KINDS[k].label + ': you ' + a + ', ' + oppShort + ' ' + b, onclick: function () { stepKind(k); } },
+          h('span', { class: 'rv-sc-name' }, SHORT[k] || KINDS[k].label),
+          h('span', { class: 'rv-n' + (a ? '' : ' zero') }, String(a)),
+          h('span', { class: 'rv-sc-badge k-' + k, 'aria-hidden': 'true' }, KINDS[k].sym),
+          h('span', { class: 'rv-n' + (b ? '' : ' zero') }, String(b))));
       });
-      summaryBox.appendChild(grid);
+      table.appendChild(list);
+      summaryBox.appendChild(table);
     }
     /* the next move of a kind after the one on the board, yours first, going round */
     function stepKind(k) {
