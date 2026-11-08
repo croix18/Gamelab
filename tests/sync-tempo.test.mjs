@@ -20,5 +20,8 @@ test('the Tempo check still catches a real outside file', () => {
   assert.deepEqual(tempoProblems(`out += '{background-image:url("' + uri(c, t) + '")}'`), []);
   assert.deepEqual(tempoProblems('<rect fill="url(#f)"/> url(%23f)'), []);
   assert.deepEqual(tempoProblems('var out = unb64url(bytes); b64url(m[2])'), []); // code, not CSS
+  assert.deepEqual(tempoProblems("return fetch(siteUrl(parts.shift()), { credentials: 'same-origin' })"), []); // the engine download, inert here
+  assert.ok(tempoProblems("return fetch(siteUrl(x))\n<script>window.TEMPO_ENGINE={}</script>").length > 0); // but not with a site engine named
+  assert.ok(tempoProblems("return fetch('https://example.com/x')").length > 0);
   assert.deepEqual(tempoProblems('<a href="https://lichess.org/training/abc">Open on Lichess</a>'), []);
 });

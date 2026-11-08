@@ -29,9 +29,19 @@ function urlProblems(html) {
   return out;
 }
 
+/* Tempo's one fetch (7 Nov 2026) downloads the full-strength Stockfish from mrshaffer.org, and only when that page
+   has put window.TEMPO_ENGINE into the file (its sync does; nothing here does). The copy in the Game Lab has no such
+   line, so the fetch can never run: allowed as long as it stays that exact call and the file names no site engine. */
+function fetchAllowed(problem, html) {
+  const m = /^fetch\(\) on line (\d+)/.exec(problem);
+  if (!m) return false;
+  const line = html.split('\n')[+m[1] - 1] || '';
+  return line.includes('fetch(siteUrl(') && !html.includes('window.TEMPO_ENGINE=');
+}
+
 /** What in a Tempo build could reach the network; empty means it's clean. */
 export function tempoProblems(html) {
-  return guard(html).filter(p => !ALLOWED.some(re => re.test(p))).concat(urlProblems(html));
+  return guard(html).filter(p => !ALLOWED.some(re => re.test(p)) && !fetchAllowed(p, html)).concat(urlProblems(html));
 }
 
 export function syncTempo(repo) {
